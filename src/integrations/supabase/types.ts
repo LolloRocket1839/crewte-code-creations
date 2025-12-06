@@ -146,6 +146,41 @@ export type Database = {
         }
         Relationships: []
       }
+      project_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string
+          project_id: string
+          role: Database["public"]["Enums"]["project_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by: string
+          project_id: string
+          role?: Database["public"]["Enums"]["project_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string
+          project_id?: string
+          role?: Database["public"]["Enums"]["project_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           budget: number | null
@@ -244,10 +279,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_project_access: {
+        Args: {
+          min_role?: Database["public"]["Enums"]["project_role"]
+          project_uuid: string
+        }
+        Returns: boolean
+      }
+      is_project_owner: { Args: { project_uuid: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      project_role: "viewer" | "editor" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -374,6 +416,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      project_role: ["viewer", "editor", "admin"],
+    },
   },
 } as const

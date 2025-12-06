@@ -4,8 +4,10 @@ import { Project } from '@/types';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ShareProjectDialog } from './ShareProjectDialog';
 import { cn } from '@/lib/utils';
 
 interface ProjectCardProps {
@@ -13,10 +15,12 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const { user } = useAuth();
   const { deleteProject } = useProjects();
   const { tasks } = useTasks(project.id);
   const { expenses } = useExpenses(project.id);
   
+  const isOwner = user?.id === project.user_id;
   const totalSpent = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const budgetPercentage = project.budget > 0 ? (totalSpent / project.budget) * 100 : 0;
@@ -49,31 +53,44 @@ export function ProjectCard({ project }: ProjectCardProps) {
               <h3 className="font-mono font-bold text-foreground group-hover:underline truncate">
                 {project.name}
               </h3>
-              <span className={cn(
-                'inline-block text-[10px] font-mono uppercase px-2 py-0.5 border-2 border-foreground mt-1',
-                statusStyles[project.status]
-              )}>
-                {project.status}
-              </span>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={cn(
+                  'inline-block text-[10px] font-mono uppercase px-2 py-0.5 border-2 border-foreground',
+                  statusStyles[project.status]
+                )}>
+                  {project.status}
+                </span>
+                {!isOwner && (
+                  <span className="inline-block text-[10px] font-mono uppercase px-2 py-0.5 border-2 border-foreground bg-accent">
+                    Shared
+                  </span>
+                )}
+              </div>
             </div>
           </Link>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                className="text-destructive font-mono"
-                onClick={() => deleteProject.mutate(project.id)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-1">
+            <ShareProjectDialog project={project} />
+            
+            {isOwner && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    className="text-destructive font-mono"
+                    onClick={() => deleteProject.mutate(project.id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
       </div>
       
