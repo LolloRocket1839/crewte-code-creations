@@ -14,11 +14,25 @@ export function useProjectMembers(projectId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_members')
-        .select('*, profile:profiles(*)')
+        .select(`
+          id,
+          project_id,
+          user_id,
+          role,
+          invited_by,
+          created_at,
+          profile:profiles!project_members_user_id_fkey (
+            id,
+            email,
+            full_name,
+            created_at,
+            updated_at
+          )
+        `)
         .eq('project_id', projectId!)
         .order('created_at', { ascending: true });
       if (error) throw error;
-      return data as ProjectMember[];
+      return data as unknown as ProjectMember[];
     },
     enabled: !!user && !!projectId,
   });
