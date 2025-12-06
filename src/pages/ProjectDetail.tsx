@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft, Share2 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { TaskList } from '@/components/tasks/TaskList';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
@@ -7,23 +7,27 @@ import { ExpenseList } from '@/components/expenses/ExpenseList';
 import { CreateExpenseDialog } from '@/components/expenses/CreateExpenseDialog';
 import { CreateCategoryDialog } from '@/components/expenses/CreateCategoryDialog';
 import { StatsCard } from '@/components/dashboard/StatsCard';
+import { ShareProjectDialog } from '@/components/projects/ShareProjectDialog';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { DollarSign, ListTodo, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { projects } = useProjects();
   const { tasks } = useTasks(id);
   const { expenses, totalExpenses } = useExpenses(id);
 
   const project = projects.find(p => p.id === id);
+  const isOwner = project?.user_id === user?.id;
 
   if (!project) {
     return (
@@ -63,6 +67,14 @@ export default function ProjectDetail() {
               <p className="text-muted-foreground mt-1">{project.description}</p>
             )}
           </div>
+          {isOwner && id && (
+            <ShareProjectDialog projectId={id}>
+              <Button variant="outline" size="sm">
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+            </ShareProjectDialog>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
