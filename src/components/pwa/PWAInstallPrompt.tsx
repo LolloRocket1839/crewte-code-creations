@@ -74,7 +74,7 @@ export function PWAInstallPrompt() {
           <div className="flex-1 min-w-0">
             <h3 className="font-bold uppercase text-sm tracking-wide">Install App</h3>
             <p className="text-xs text-muted-foreground mt-1">
-              Add TaskFlow to your home screen for quick access
+              Add Cost Ledger Pro to your home screen for quick access
             </p>
           </div>
           <button

@@ -77,7 +77,7 @@ export default function Auth() {
             toast({ title: 'Sign up failed', description: error.message, variant: 'destructive' });
           }
         } else {
-          toast({ title: 'Account created!', description: 'Welcome to TaskFlow' });
+          toast({ title: 'Account created!', description: 'Welcome to Cost Ledger Pro' });
           navigate('/dashboard');
         }
       }
@@ -92,11 +92,11 @@ export default function Auth() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center h-16 w-16 border-2 border-foreground bg-foreground text-background mb-4">
-            <span className="text-3xl font-bold">T</span>
+            <span className="text-3xl font-bold">C</span>
           </div>
-          <h1 className="text-2xl font-bold uppercase tracking-wider">TaskFlow</h1>
+          <h1 className="text-2xl font-bold uppercase tracking-wider">Cost Ledger Pro</h1>
           <p className="text-sm text-muted-foreground mt-1 uppercase tracking-wide">
-            Task & Expense Tracker
+            Investment Tracker
           </p>
         </div>
 
