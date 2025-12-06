@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
@@ -20,7 +21,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="border-2 border-foreground p-8 shadow-brutal animate-pulse">
+          <div className="text-center">
+            <div className="h-12 w-12 border-2 border-foreground bg-foreground text-background flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl font-bold">T</span>
+            </div>
+            <p className="text-sm uppercase tracking-wide font-semibold">Loading...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -38,7 +46,14 @@ function AppRoutes() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="border-2 border-foreground p-8 shadow-brutal animate-pulse">
+          <div className="text-center">
+            <div className="h-12 w-12 border-2 border-foreground bg-foreground text-background flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl font-bold">T</span>
+            </div>
+            <p className="text-sm uppercase tracking-wide font-semibold">Loading...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -65,6 +80,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AppRoutes />
+          <PWAInstallPrompt />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
