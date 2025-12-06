@@ -76,10 +76,15 @@ export type Database = {
           amount: number
           category_id: string | null
           created_at: string | null
+          currency: string
           date: string
           description: string
           id: string
+          is_paid: boolean
+          notes: string | null
+          paid_at: string | null
           project_id: string | null
+          receipt_url: string | null
           updated_at: string | null
           user_id: string
         }
@@ -87,10 +92,15 @@ export type Database = {
           amount: number
           category_id?: string | null
           created_at?: string | null
+          currency?: string
           date?: string
           description: string
           id?: string
+          is_paid?: boolean
+          notes?: string | null
+          paid_at?: string | null
           project_id?: string | null
+          receipt_url?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -98,10 +108,15 @@ export type Database = {
           amount?: number
           category_id?: string | null
           created_at?: string | null
+          currency?: string
           date?: string
           description?: string
           id?: string
+          is_paid?: boolean
+          notes?: string | null
+          paid_at?: string | null
           project_id?: string | null
+          receipt_url?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -220,6 +235,96 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      revenue_categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      revenues: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string | null
+          currency: string
+          date: string
+          description: string
+          id: string
+          is_recurring: boolean
+          notes: string | null
+          project_id: string | null
+          recurrence_day: number | null
+          recurrence_type: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string | null
+          currency?: string
+          date?: string
+          description: string
+          id?: string
+          is_recurring?: boolean
+          notes?: string | null
+          project_id?: string | null
+          recurrence_day?: number | null
+          recurrence_type?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string | null
+          currency?: string
+          date?: string
+          description?: string
+          id?: string
+          is_recurring?: boolean
+          notes?: string | null
+          project_id?: string | null
+          recurrence_day?: number | null
+          recurrence_type?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenues_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenues_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,29 +9,43 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useProjects } from '@/hooks/useProjects';
-import { CURRENCIES, Currency } from '@/types';
+import { Expense, CURRENCIES, Currency } from '@/types';
 
-interface CreateExpenseDialogProps {
-  projectId?: string;
+interface EditExpenseDialogProps {
+  expense: Expense;
 }
 
-export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
+export function EditExpenseDialog({ expense }: EditExpenseDialogProps) {
   const [open, setOpen] = useState(false);
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<Currency>('EUR');
-  const [categoryId, setCategoryId] = useState('');
-  const [selectedProject, setSelectedProject] = useState(projectId || '');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [isPaid, setIsPaid] = useState(false);
-  const [notes, setNotes] = useState('');
+  const [description, setDescription] = useState(expense.description);
+  const [amount, setAmount] = useState(expense.amount.toString());
+  const [currency, setCurrency] = useState<Currency>(expense.currency || 'EUR');
+  const [categoryId, setCategoryId] = useState(expense.category_id || '');
+  const [selectedProject, setSelectedProject] = useState(expense.project_id || '');
+  const [date, setDate] = useState(expense.date);
+  const [isPaid, setIsPaid] = useState(expense.is_paid);
+  const [notes, setNotes] = useState(expense.notes || '');
   
-  const { createExpense, categories } = useExpenses();
+  const { updateExpense, categories } = useExpenses();
   const { projects } = useProjects();
+
+  useEffect(() => {
+    if (open) {
+      setDescription(expense.description);
+      setAmount(expense.amount.toString());
+      setCurrency(expense.currency || 'EUR');
+      setCategoryId(expense.category_id || '');
+      setSelectedProject(expense.project_id || '');
+      setDate(expense.date);
+      setIsPaid(expense.is_paid);
+      setNotes(expense.notes || '');
+    }
+  }, [open, expense]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createExpense.mutate({
+    updateExpense.mutate({
+      id: expense.id,
       description,
       amount: parseFloat(amount),
       currency,
@@ -39,39 +53,32 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
       project_id: selectedProject && selectedProject !== 'none' ? selectedProject : null,
       date,
       is_paid: isPaid,
+      paid_at: isPaid ? new Date().toISOString() : null,
       notes: notes || null,
     });
     setOpen(false);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setDescription('');
-    setAmount('');
-    setCurrency('EUR');
-    setCategoryId('');
-    setDate(new Date().toISOString().split('T')[0]);
-    setIsPaid(false);
-    setNotes('');
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <Plus className="h-4 w-4" />
-          Aggiungi Spesa
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted border-2 border-transparent hover:border-foreground"
+        >
+          <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nuova Spesa</DialogTitle>
+          <DialogTitle>Modifica Spesa</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="description">Descrizione</Label>
+            <Label htmlFor="edit-description">Descrizione</Label>
             <Input
-              id="description"
+              id="edit-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Descrizione della spesa"
@@ -81,9 +88,9 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
           
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="amount">Importo</Label>
+              <Label htmlFor="edit-amount">Importo</Label>
               <Input
-                id="amount"
+                id="edit-amount"
                 type="number"
                 step="0.01"
                 min="0"
@@ -111,9 +118,9 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="date">Data</Label>
+              <Label htmlFor="edit-date">Data</Label>
               <Input
-                id="date"
+                id="edit-date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
@@ -122,14 +129,13 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
             </div>
           </div>
           
-          {/* Paid Toggle */}
           <div className="flex items-center justify-between p-3 border-2 border-foreground bg-muted/50">
             <div>
-              <Label htmlFor="is-paid" className="font-mono font-bold">Pagato</Label>
-              <p className="text-xs text-muted-foreground font-mono">Segna come già pagato</p>
+              <Label htmlFor="edit-is-paid" className="font-mono font-bold">Pagato</Label>
+              <p className="text-xs text-muted-foreground font-mono">Segna come pagato/non pagato</p>
             </div>
             <Switch
-              id="is-paid"
+              id="edit-is-paid"
               checked={isPaid}
               onCheckedChange={setIsPaid}
             />
@@ -158,29 +164,27 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
             </Select>
           </div>
           
-          {!projectId && (
-            <div className="space-y-2">
-              <Label>Progetto</Label>
-              <Select value={selectedProject} onValueChange={setSelectedProject}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona progetto" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nessun progetto</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label>Progetto</Label>
+            <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleziona progetto" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nessun progetto</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           
           <div className="space-y-2">
-            <Label htmlFor="notes">Note</Label>
+            <Label htmlFor="edit-notes">Note</Label>
             <Textarea
-              id="notes"
+              id="edit-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Note aggiuntive..."
@@ -192,8 +196,8 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annulla
             </Button>
-            <Button type="submit" disabled={createExpense.isPending}>
-              {createExpense.isPending ? 'Salvataggio...' : 'Aggiungi'}
+            <Button type="submit" disabled={updateExpense.isPending}>
+              {updateExpense.isPending ? 'Salvataggio...' : 'Salva'}
             </Button>
           </div>
         </form>

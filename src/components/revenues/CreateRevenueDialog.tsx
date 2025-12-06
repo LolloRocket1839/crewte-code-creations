@@ -7,15 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { useExpenses } from '@/hooks/useExpenses';
+import { useRevenues } from '@/hooks/useRevenues';
 import { useProjects } from '@/hooks/useProjects';
 import { CURRENCIES, Currency } from '@/types';
 
-interface CreateExpenseDialogProps {
+interface CreateRevenueDialogProps {
   projectId?: string;
 }
 
-export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
+export function CreateRevenueDialog({ projectId }: CreateRevenueDialogProps) {
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -23,22 +23,26 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
   const [categoryId, setCategoryId] = useState('');
   const [selectedProject, setSelectedProject] = useState(projectId || '');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [isPaid, setIsPaid] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
+  const [recurrenceDay, setRecurrenceDay] = useState('1');
   const [notes, setNotes] = useState('');
   
-  const { createExpense, categories } = useExpenses();
+  const { createRevenue, categories } = useRevenues();
   const { projects } = useProjects();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createExpense.mutate({
+    createRevenue.mutate({
       description,
       amount: parseFloat(amount),
       currency,
       category_id: categoryId && categoryId !== 'none' ? categoryId : null,
       project_id: selectedProject && selectedProject !== 'none' ? selectedProject : null,
       date,
-      is_paid: isPaid,
+      is_recurring: isRecurring,
+      recurrence_type: isRecurring ? recurrenceType : null,
+      recurrence_day: isRecurring ? parseInt(recurrenceDay) : null,
       notes: notes || null,
     });
     setOpen(false);
@@ -51,7 +55,9 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
     setCurrency('EUR');
     setCategoryId('');
     setDate(new Date().toISOString().split('T')[0]);
-    setIsPaid(false);
+    setIsRecurring(false);
+    setRecurrenceType('monthly');
+    setRecurrenceDay('1');
     setNotes('');
   };
 
@@ -60,30 +66,30 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <Plus className="h-4 w-4" />
-          Aggiungi Spesa
+          Aggiungi Entrata
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nuova Spesa</DialogTitle>
+          <DialogTitle>Nuova Entrata</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="description">Descrizione</Label>
+            <Label htmlFor="revenue-description">Descrizione</Label>
             <Input
-              id="description"
+              id="revenue-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descrizione della spesa"
+              placeholder="Descrizione dell'entrata"
               required
             />
           </div>
           
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="amount">Importo</Label>
+              <Label htmlFor="revenue-amount">Importo</Label>
               <Input
-                id="amount"
+                id="revenue-amount"
                 type="number"
                 step="0.01"
                 min="0"
@@ -111,9 +117,9 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="date">Data</Label>
+              <Label htmlFor="revenue-date">Data</Label>
               <Input
-                id="date"
+                id="revenue-date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
@@ -122,18 +128,47 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
             </div>
           </div>
           
-          {/* Paid Toggle */}
+          {/* Recurring Toggle */}
           <div className="flex items-center justify-between p-3 border-2 border-foreground bg-muted/50">
             <div>
-              <Label htmlFor="is-paid" className="font-mono font-bold">Pagato</Label>
-              <p className="text-xs text-muted-foreground font-mono">Segna come già pagato</p>
+              <Label htmlFor="is-recurring" className="font-mono font-bold">Ricorrente</Label>
+              <p className="text-xs text-muted-foreground font-mono">Entrata periodica</p>
             </div>
             <Switch
-              id="is-paid"
-              checked={isPaid}
-              onCheckedChange={setIsPaid}
+              id="is-recurring"
+              checked={isRecurring}
+              onCheckedChange={setIsRecurring}
             />
           </div>
+          
+          {isRecurring && (
+            <div className="grid grid-cols-2 gap-3 p-3 border-2 border-dashed border-muted-foreground/50">
+              <div className="space-y-2">
+                <Label>Frequenza</Label>
+                <Select value={recurrenceType} onValueChange={(v) => setRecurrenceType(v as 'monthly' | 'quarterly' | 'yearly')}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Mensile</SelectItem>
+                    <SelectItem value="quarterly">Trimestrale</SelectItem>
+                    <SelectItem value="yearly">Annuale</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="recurrence-day">Giorno</Label>
+                <Input
+                  id="recurrence-day"
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={recurrenceDay}
+                  onChange={(e) => setRecurrenceDay(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
           
           <div className="space-y-2">
             <Label>Categoria</Label>
@@ -178,9 +213,9 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
           )}
           
           <div className="space-y-2">
-            <Label htmlFor="notes">Note</Label>
+            <Label htmlFor="revenue-notes">Note</Label>
             <Textarea
-              id="notes"
+              id="revenue-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Note aggiuntive..."
@@ -192,8 +227,8 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annulla
             </Button>
-            <Button type="submit" disabled={createExpense.isPending}>
-              {createExpense.isPending ? 'Salvataggio...' : 'Aggiungi'}
+            <Button type="submit" disabled={createRevenue.isPending}>
+              {createRevenue.isPending ? 'Salvataggio...' : 'Aggiungi'}
             </Button>
           </div>
         </form>
