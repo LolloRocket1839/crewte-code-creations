@@ -28,8 +28,8 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r-2 border-sidebar-border">
       <SidebarHeader className="p-6 border-b-2 border-sidebar-border">
-        <h1 className="text-xl font-bold uppercase tracking-wider text-sidebar-foreground">TaskFlow</h1>
-        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wide">Expense Tracker</p>
+        <h1 className="text-xl font-bold uppercase tracking-wider text-sidebar-foreground">Cost Ledger Pro</h1>
+        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wide">Investment Tracker</p>
       </SidebarHeader>
 
       <SidebarContent className="px-3 py-4">

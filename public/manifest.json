@@ -1,7 +1,7 @@
 {
-  "name": "TaskFlow - Task & Expense Manager",
-  "short_name": "TaskFlow",
-  "description": "Track projects, tasks, and expenses with a brutalist design",
+  "name": "Cost Ledger Pro - Real Estate Investment Tracker",
+  "short_name": "Cost Ledger Pro",
+  "description": "Track real estate investment expenses, revenues, and ROI metrics",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
