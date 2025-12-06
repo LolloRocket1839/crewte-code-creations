@@ -28,8 +28,8 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
     createExpense.mutate({
       description,
       amount: parseFloat(amount),
-      category_id: categoryId || null,
-      project_id: selectedProject || null,
+      category_id: categoryId && categoryId !== 'none' ? categoryId : null,
+      project_id: selectedProject && selectedProject !== 'none' ? selectedProject : null,
       date,
     });
     setOpen(false);
@@ -97,7 +97,7 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No category</SelectItem>
+                <SelectItem value="none">No category</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     <span className="flex items-center gap-2">
@@ -120,8 +120,8 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
                 <SelectTrigger>
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No project</SelectItem>
+              <SelectContent>
+                  <SelectItem value="none">No project</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}

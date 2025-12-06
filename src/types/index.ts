@@ -17,6 +17,16 @@ export interface Project {
   updated_at: string;
 }
 
+export interface ProjectMember {
+  id: string;
+  project_id: string;
+  user_id: string;
+  role: 'viewer' | 'editor' | 'admin';
+  invited_by: string;
+  created_at: string;
+  profile?: Profile;
+}
+
 export interface ExpenseCategory {
   id: string;
   user_id: string;

@@ -31,7 +31,7 @@ export function CreateTaskDialog({ projectId, parentId }: CreateTaskDialogProps)
       title,
       description: description || null,
       priority,
-      project_id: selectedProject || null,
+      project_id: selectedProject && selectedProject !== 'none' ? selectedProject : null,
       parent_id: parentId || null,
       due_date: dueDate || null,
     });
@@ -84,8 +84,8 @@ export function CreateTaskDialog({ projectId, parentId }: CreateTaskDialogProps)
                 <SelectTrigger>
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No project</SelectItem>
+              <SelectContent>
+                  <SelectItem value="none">No project</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
