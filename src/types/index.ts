@@ -35,6 +35,16 @@ export interface ExpenseCategory {
   created_at: string;
 }
 
+export interface RevenueCategory {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  created_at: string;
+}
+
+export type Currency = 'EUR' | 'CHF' | 'USD' | 'GBP';
+
 export interface Expense {
   id: string;
   user_id: string;
@@ -42,10 +52,34 @@ export interface Expense {
   category_id: string | null;
   description: string;
   amount: number;
+  currency: Currency;
   date: string;
+  is_paid: boolean;
+  paid_at: string | null;
+  notes: string | null;
+  receipt_url: string | null;
   created_at: string;
   updated_at: string;
   category?: ExpenseCategory;
+  project?: Project;
+}
+
+export interface Revenue {
+  id: string;
+  user_id: string;
+  project_id: string | null;
+  category_id: string | null;
+  description: string;
+  amount: number;
+  currency: Currency;
+  date: string;
+  is_recurring: boolean;
+  recurrence_type: 'monthly' | 'quarterly' | 'yearly' | null;
+  recurrence_day: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  category?: RevenueCategory;
   project?: Project;
 }
 
@@ -76,3 +110,33 @@ export interface ActivityLog {
   metadata: Record<string, unknown>;
   created_at: string;
 }
+
+export interface ExpenseFilters {
+  search: string;
+  categoryId: string | null;
+  projectId: string | null;
+  isPaid: boolean | null;
+  currency: Currency | null;
+  dateFrom: string | null;
+  dateTo: string | null;
+}
+
+export interface InvestmentMetrics {
+  totalRevenues: number;
+  totalExpenses: number;
+  netProfit: number;
+  roi: number;
+  capRate: number;
+  cashOnCash: number;
+}
+
+export const CURRENCIES: { value: Currency; label: string; symbol: string }[] = [
+  { value: 'EUR', label: 'Euro', symbol: '€' },
+  { value: 'CHF', label: 'Franco Svizzero', symbol: 'CHF' },
+  { value: 'USD', label: 'Dollaro USA', symbol: '$' },
+  { value: 'GBP', label: 'Sterlina', symbol: '£' },
+];
+
+export const getCurrencySymbol = (currency: Currency): string => {
+  return CURRENCIES.find(c => c.value === currency)?.symbol || currency;
+};
