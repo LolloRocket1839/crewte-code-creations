@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
-import { FolderKanban, DollarSign, ListTodo, MoreVertical, Trash2 } from 'lucide-react';
+import { FolderKanban, DollarSign, ListTodo, MoreVertical, Trash2, Download } from 'lucide-react';
 import { Project } from '@/types';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useAuth } from '@/hooks/useAuth';
+import { useProjectImportExport } from '@/hooks/useProjectImportExport';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { ShareProjectDialog } from './ShareProjectDialog';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const { deleteProject } = useProjects();
   const { tasks } = useTasks(project.id);
   const { expenses } = useExpenses(project.id);
+  const { exportProject, isExporting } = useProjectImportExport();
   
   const isOwner = user?.id === project.user_id;
   const totalSpent = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
@@ -72,24 +74,35 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <div className="flex items-center gap-1">
             <ShareProjectDialog project={project} />
             
-            {isOwner && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    className="text-destructive font-mono"
-                    onClick={() => deleteProject.mutate(project.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="font-mono"
+                  onClick={() => exportProject(project.id)}
+                  disabled={isExporting}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {isExporting ? 'Exporting...' : 'Export'}
+                </DropdownMenuItem>
+                {isOwner && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive font-mono"
+                      onClick={() => deleteProject.mutate(project.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

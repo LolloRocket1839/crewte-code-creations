@@ -1,6 +1,7 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectDialog } from '@/components/projects/CreateProjectDialog';
+import { ImportProjectDialog } from '@/components/projects/ImportProjectDialog';
 import { useProjects } from '@/hooks/useProjects';
 import { FolderKanban } from 'lucide-react';
 
@@ -15,7 +16,10 @@ export default function Projects() {
           <p className="text-muted-foreground font-mono text-sm">
             Manage your projects and track budgets
           </p>
-          <CreateProjectDialog />
+          <div className="flex items-center gap-2">
+            <ImportProjectDialog />
+            <CreateProjectDialog />
+          </div>
         </div>
 
         {/* Loading State */}
