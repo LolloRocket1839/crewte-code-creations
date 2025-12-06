@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Trash2, Check, X } from 'lucide-react';
+import { Trash2, Check, X, Paperclip } from 'lucide-react';
 import { Expense, getCurrencySymbol } from '@/types';
 import { useExpenses } from '@/hooks/useExpenses';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EditExpenseDialog } from './EditExpenseDialog';
+import { ReceiptPreview } from './ReceiptPreview';
 
 interface ExpenseItemProps {
   expense: Expense;
@@ -13,6 +15,7 @@ interface ExpenseItemProps {
 
 export function ExpenseItem({ expense }: ExpenseItemProps) {
   const { deleteExpense, togglePaidStatus } = useExpenses();
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const formatCurrency = (amount: number, currency: string) => {
     const symbol = getCurrencySymbol(currency as any);
@@ -101,6 +104,18 @@ export function ExpenseItem({ expense }: ExpenseItemProps) {
         </p>
       </div>
       
+      {/* Receipt Icon */}
+      {expense.receipt_url && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10 border-2 border-transparent hover:border-primary shrink-0"
+          onClick={() => setPreviewOpen(true)}
+        >
+          <Paperclip className="h-4 w-4" />
+        </Button>
+      )}
+      
       {/* Actions */}
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <EditExpenseDialog expense={expense} />
@@ -113,6 +128,15 @@ export function ExpenseItem({ expense }: ExpenseItemProps) {
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
+      
+      {/* Receipt Preview Modal */}
+      {expense.receipt_url && (
+        <ReceiptPreview
+          open={previewOpen}
+          onOpenChange={setPreviewOpen}
+          receiptUrl={expense.receipt_url}
+        />
+      )}
     </div>
   );
 }
