@@ -7,15 +7,18 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1rem",
       screens: {
-        "2xl": "1400px",
+        sm: "640px",
+        md: "768px",
+        lg: "1024px",
+        xl: "1280px",
       },
     },
     extend: {
       fontFamily: {
-        sans: ['DM Sans', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        mono: ['JetBrains Mono', 'Space Mono', 'monospace'],
+        sans: ['JetBrains Mono', 'Space Mono', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -77,8 +80,21 @@ export default {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "var(--radius)",
+        sm: "var(--radius)",
+      },
+      borderWidth: {
+        DEFAULT: "var(--border-width)",
+        "0": "0",
+        "2": "2px",
+        "3": "3px",
+        "4": "4px",
+      },
+      boxShadow: {
+        brutal: "4px 4px 0px 0px hsl(var(--foreground))",
+        "brutal-sm": "2px 2px 0px 0px hsl(var(--foreground))",
+        "brutal-lg": "6px 6px 0px 0px hsl(var(--foreground))",
+        "brutal-accent": "4px 4px 0px 0px hsl(var(--accent))",
       },
       keyframes: {
         "accordion-down": {
@@ -97,12 +113,33 @@ export default {
           from: { opacity: "0", transform: "translateX(-8px)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
+        "slide-up": {
+          from: { opacity: "0", transform: "translateY(100%)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        shake: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%": { transform: "translateX(-4px)" },
+          "75%": { transform: "translateX(4px)" },
+        },
+        "check-bounce": {
+          "0%": { transform: "scale(0)" },
+          "50%": { transform: "scale(1.2)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         "slide-in": "slide-in 0.3s ease-out",
+        "slide-up": "slide-up 0.3s ease-out",
+        shake: "shake 0.3s ease-in-out",
+        "check-bounce": "check-bounce 0.3s ease-out",
+      },
+      spacing: {
+        "safe-bottom": "env(safe-area-inset-bottom)",
+        "safe-top": "env(safe-area-inset-top)",
       },
     },
   },

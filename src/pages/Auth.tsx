@@ -88,90 +88,115 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md animate-fade-in">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-semibold">
-            {isLogin ? 'Welcome back' : 'Create an account'}
-          </CardTitle>
-          <CardDescription>
-            {isLogin
-              ? 'Sign in to your TaskFlow account'
-              : 'Get started with task and expense tracking'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+      <div className="w-full max-w-md animate-fade-in">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center h-16 w-16 border-2 border-foreground bg-foreground text-background mb-4">
+            <span className="text-3xl font-bold">T</span>
+          </div>
+          <h1 className="text-2xl font-bold uppercase tracking-wider">TaskFlow</h1>
+          <p className="text-sm text-muted-foreground mt-1 uppercase tracking-wide">
+            Task & Expense Tracker
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {isLogin ? 'Sign In' : 'Create Account'}
+            </CardTitle>
+            <CardDescription>
+              {isLogin
+                ? 'Enter your credentials to access your account'
+                : 'Fill in the details to create your account'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="uppercase text-xs tracking-wide font-bold">
+                    Full Name
+                  </Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="John Doe"
+                  />
+                  {errors.fullName && (
+                    <p className="text-sm text-destructive font-semibold">{errors.fullName}</p>
+                  )}
+                </div>
+              )}
+              
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="email" className="uppercase text-xs tracking-wide font-bold">
+                  Email
+                </Label>
                 <Input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="John Doe"
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
                 />
-                {errors.fullName && (
-                  <p className="text-sm text-destructive">{errors.fullName}</p>
+                {errors.email && (
+                  <p className="text-sm text-destructive font-semibold">{errors.email}</p>
                 )}
               </div>
-            )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="password" className="uppercase text-xs tracking-wide font-bold">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+                {errors.password && (
+                  <p className="text-sm text-destructive font-semibold">{errors.password}</p>
+                )}
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <span className="animate-pulse">Loading...</span>
+                ) : isLogin ? (
+                  'Sign In'
+                ) : (
+                  'Create Account'
+                )}
+              </Button>
+            </form>
             
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setErrors({});
+                }}
+                className="text-sm text-muted-foreground hover:text-foreground underline-animate transition-colors uppercase tracking-wide"
+              >
+                {isLogin
+                  ? "Don't have an account? Sign up"
+                  : 'Already have an account? Sign in'}
+              </button>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
-            </div>
-            
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting
-                ? 'Please wait...'
-                : isLogin
-                ? 'Sign In'
-                : 'Create Account'}
-            </Button>
-          </form>
-          
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setErrors({});
-              }}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {isLogin
-                ? "Don't have an account? Sign up"
-                : 'Already have an account? Sign in'}
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <p className="text-center text-xs text-muted-foreground mt-6 uppercase tracking-wide">
+          Built with brutalist precision
+        </p>
+      </div>
     </div>
   );
 }
