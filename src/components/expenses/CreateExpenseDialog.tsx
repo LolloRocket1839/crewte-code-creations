@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Plus, Upload, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useProjects } from '@/hooks/useProjects';
+import { useReceiptUpload } from '@/hooks/useReceiptUpload';
 import { CURRENCIES, Currency } from '@/types';
 
 interface CreateExpenseDialogProps {
@@ -25,12 +26,17 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [isPaid, setIsPaid] = useState(false);
   const [notes, setNotes] = useState('');
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { createExpense, categories } = useExpenses();
   const { projects } = useProjects();
+  const { uploadReceipt, validateFile, isUploading } = useReceiptUpload();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     createExpense.mutate({
       description,
       amount: parseFloat(amount),
@@ -40,9 +46,36 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
       date,
       is_paid: isPaid,
       notes: notes || null,
+    }, {
+      onSuccess: async (data) => {
+        // Upload receipt if file was selected
+        if (receiptFile && data?.id) {
+          await uploadReceipt(receiptFile, data.id);
+        }
+        setOpen(false);
+        resetForm();
+      }
     });
-    setOpen(false);
-    resetForm();
+  };
+  
+  const handleFileSelect = (file: File) => {
+    const error = validateFile(file);
+    if (error) return;
+    
+    setReceiptFile(file);
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => setReceiptPreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setReceiptPreview(null);
+    }
+  };
+  
+  const clearReceipt = () => {
+    setReceiptFile(null);
+    setReceiptPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const resetForm = () => {
@@ -53,6 +86,7 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
     setDate(new Date().toISOString().split('T')[0]);
     setIsPaid(false);
     setNotes('');
+    clearReceipt();
   };
 
   return (
@@ -188,12 +222,66 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
             />
           </div>
           
+          {/* Receipt Upload */}
+          <div className="space-y-2">
+            <Label>Ricevuta / Allegato</Label>
+            {receiptFile ? (
+              <div className="border-2 border-foreground p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {receiptFile.type === 'application/pdf' ? (
+                      <FileText className="h-5 w-5 text-red-500" />
+                    ) : (
+                      <ImageIcon className="h-5 w-5 text-green-500" />
+                    )}
+                    <span className="text-sm font-mono truncate max-w-[180px]">
+                      {receiptFile.name}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={clearReceipt}
+                    className="h-6 w-6"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                {receiptPreview && (
+                  <img 
+                    src={receiptPreview} 
+                    alt="Anteprima" 
+                    className="w-full max-h-24 object-contain border border-muted"
+                  />
+                )}
+              </div>
+            ) : (
+              <div
+                className="border-2 border-dashed border-muted-foreground/30 p-4 text-center cursor-pointer hover:border-foreground transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,.pdf"
+                  onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                  className="hidden"
+                />
+                <Upload className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                <p className="text-xs font-mono text-muted-foreground">
+                  JPG, PNG, PDF • Max 10MB
+                </p>
+              </div>
+            )}
+          </div>
+          
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annulla
             </Button>
-            <Button type="submit" disabled={createExpense.isPending}>
-              {createExpense.isPending ? 'Salvataggio...' : 'Aggiungi'}
+            <Button type="submit" disabled={createExpense.isPending || isUploading}>
+              {createExpense.isPending || isUploading ? 'Salvataggio...' : 'Aggiungi'}
             </Button>
           </div>
         </form>

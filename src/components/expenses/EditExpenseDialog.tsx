@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useProjects } from '@/hooks/useProjects';
 import { Expense, CURRENCIES, Currency } from '@/types';
+import { ReceiptUpload } from './ReceiptUpload';
 
 interface EditExpenseDialogProps {
   expense: Expense;
@@ -25,6 +26,7 @@ export function EditExpenseDialog({ expense }: EditExpenseDialogProps) {
   const [date, setDate] = useState(expense.date);
   const [isPaid, setIsPaid] = useState(expense.is_paid);
   const [notes, setNotes] = useState(expense.notes || '');
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(expense.receipt_url || null);
   
   const { updateExpense, categories } = useExpenses();
   const { projects } = useProjects();
@@ -39,6 +41,7 @@ export function EditExpenseDialog({ expense }: EditExpenseDialogProps) {
       setDate(expense.date);
       setIsPaid(expense.is_paid);
       setNotes(expense.notes || '');
+      setReceiptUrl(expense.receipt_url || null);
     }
   }, [open, expense]);
 
@@ -55,8 +58,13 @@ export function EditExpenseDialog({ expense }: EditExpenseDialogProps) {
       is_paid: isPaid,
       paid_at: isPaid ? new Date().toISOString() : null,
       notes: notes || null,
+      receipt_url: receiptUrl,
     });
     setOpen(false);
+  };
+  
+  const handleReceiptChange = (url: string | null) => {
+    setReceiptUrl(url);
   };
 
   return (
@@ -189,6 +197,16 @@ export function EditExpenseDialog({ expense }: EditExpenseDialogProps) {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Note aggiuntive..."
               rows={2}
+            />
+          </div>
+          
+          {/* Receipt Upload */}
+          <div className="space-y-2">
+            <Label>Ricevuta / Allegato</Label>
+            <ReceiptUpload
+              expenseId={expense.id}
+              currentUrl={receiptUrl}
+              onUpload={handleReceiptChange}
             />
           </div>
           
