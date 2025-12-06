@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Share2 } from 'lucide-react';
+import { ArrowLeft, Share2, Download } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { TaskList } from '@/components/tasks/TaskList';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
@@ -12,6 +12,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useAuth } from '@/hooks/useAuth';
+import { useProjectImportExport } from '@/hooks/useProjectImportExport';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,6 +26,7 @@ export default function ProjectDetail() {
   const { projects } = useProjects();
   const { tasks } = useTasks(id);
   const { expenses, totalExpenses } = useExpenses(id);
+  const { exportProject, isExporting } = useProjectImportExport();
 
   const project = projects.find(p => p.id === id);
   const isOwner = project?.user_id === user?.id;
@@ -67,14 +69,27 @@ export default function ProjectDetail() {
               <p className="text-muted-foreground mt-1">{project.description}</p>
             )}
           </div>
-          {isOwner && id && (
-            <ShareProjectDialog projectId={id}>
-              <Button variant="outline" size="sm">
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
+          <div className="flex items-center gap-2">
+            {id && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => exportProject(id)}
+                disabled={isExporting}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {isExporting ? 'Exporting...' : 'Export'}
               </Button>
-            </ShareProjectDialog>
-          )}
+            )}
+            {isOwner && id && (
+              <ShareProjectDialog projectId={id}>
+                <Button variant="outline" size="sm">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+              </ShareProjectDialog>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
