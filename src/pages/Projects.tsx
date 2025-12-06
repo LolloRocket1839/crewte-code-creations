@@ -2,36 +2,52 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectDialog } from '@/components/projects/CreateProjectDialog';
 import { useProjects } from '@/hooks/useProjects';
-import { Skeleton } from '@/components/ui/skeleton';
+import { FolderKanban } from 'lucide-react';
 
 export default function Projects() {
   const { projects, isLoading } = useProjects();
 
   return (
     <AppLayout title="Projects">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground">
+      <div className="space-y-6 animate-fade-in">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <p className="text-muted-foreground font-mono text-sm">
             Manage your projects and track budgets
           </p>
           <CreateProjectDialog />
         </div>
 
+        {/* Loading State */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-[200px] rounded-lg" />
+              <div 
+                key={i} 
+                className="h-[200px] border-2 border-foreground bg-muted animate-pulse"
+              />
             ))}
           </div>
         ) : projects.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground mb-4">No projects yet</p>
+          /* Empty State */
+          <div className="border-2 border-foreground bg-card p-12 text-center">
+            <div className="h-16 w-16 border-2 border-foreground bg-muted mx-auto flex items-center justify-center mb-4">
+              <FolderKanban className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground font-mono mb-6">No projects yet</p>
             <CreateProjectDialog />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+          /* Projects Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {projects.map((project, index) => (
+              <div 
+                key={project.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <ProjectCard project={project} />
+              </div>
             ))}
           </div>
         )}

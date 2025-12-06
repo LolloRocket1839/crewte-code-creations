@@ -3,7 +3,6 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Task } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface TaskCalendarProps {
@@ -35,68 +34,80 @@ export function TaskCalendar({ tasks }: TaskCalendarProps) {
   const startDayOfWeek = startOfMonth(currentMonth).getDay();
 
   return (
-    <Card className="animate-fade-in">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            {format(currentMonth, 'MMMM yyyy')}
-          </h2>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentMonth(new Date())}
-            >
-              Today
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+    <div className="border-2 border-foreground bg-card shadow-brutal animate-fade-in">
+      {/* Header */}
+      <div className="border-b-2 border-foreground p-4 flex items-center justify-between">
+        <h2 className="font-mono font-bold uppercase tracking-wider">
+          {format(currentMonth, 'MMMM yyyy')}
+        </h2>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-mono text-xs"
+            onClick={() => setCurrentMonth(new Date())}
+          >
+            Today
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="p-4">
+        <div className="grid grid-cols-7 border-2 border-foreground">
+          {/* Day Headers */}
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
             <div
               key={day}
-              className="bg-muted px-2 py-3 text-center text-xs font-medium text-muted-foreground"
+              className="bg-foreground text-background px-2 py-3 text-center text-xs font-mono font-bold uppercase border-r-2 border-foreground last:border-r-0"
             >
               {day}
             </div>
           ))}
           
+          {/* Empty cells */}
           {Array.from({ length: startDayOfWeek }).map((_, i) => (
-            <div key={`empty-${i}`} className="bg-background p-2 min-h-[100px]" />
+            <div 
+              key={`empty-${i}`} 
+              className="bg-muted/30 p-2 min-h-[80px] md:min-h-[100px] border-r-2 border-b-2 border-foreground last:border-r-0" 
+            />
           ))}
           
-          {days.map((day) => {
+          {/* Day cells */}
+          {days.map((day, index) => {
             const dayTasks = getTasksForDay(day);
             const isCurrentMonth = isSameMonth(day, currentMonth);
+            const isLastInRow = (startDayOfWeek + index + 1) % 7 === 0;
             
             return (
               <div
                 key={day.toString()}
                 className={cn(
-                  'bg-background p-2 min-h-[100px] transition-colors hover:bg-muted/50',
+                  'bg-card p-2 min-h-[80px] md:min-h-[100px] transition-colors hover:bg-muted/50 border-b-2 border-foreground',
+                  !isLastInRow && 'border-r-2',
                   !isCurrentMonth && 'opacity-50'
                 )}
               >
                 <div
                   className={cn(
-                    'h-7 w-7 rounded-full flex items-center justify-center text-sm mb-1',
-                    isToday(day) && 'bg-primary text-primary-foreground font-medium'
+                    'h-7 w-7 flex items-center justify-center text-sm font-mono mb-1',
+                    isToday(day) && 'bg-foreground text-background font-bold'
                   )}
                 >
                   {format(day, 'd')}
@@ -106,11 +117,11 @@ export function TaskCalendar({ tasks }: TaskCalendarProps) {
                   {dayTasks.slice(0, 3).map((task) => (
                     <div
                       key={task.id}
-                      className="flex items-center gap-1.5 px-1.5 py-1 rounded bg-muted/50 group"
+                      className="flex items-center gap-1.5 px-1.5 py-1 border border-foreground bg-muted/50 group hover:bg-muted transition-colors"
                     >
-                      <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', priorityDots[task.priority])} />
+                      <span className={cn('h-2 w-2 shrink-0', priorityDots[task.priority])} />
                       <span className={cn(
-                        'text-xs truncate',
+                        'text-[10px] md:text-xs font-mono truncate',
                         task.status === 'completed' && 'line-through text-muted-foreground'
                       )}>
                         {task.title}
@@ -118,7 +129,7 @@ export function TaskCalendar({ tasks }: TaskCalendarProps) {
                     </div>
                   ))}
                   {dayTasks.length > 3 && (
-                    <p className="text-xs text-muted-foreground px-1.5">
+                    <p className="text-[10px] md:text-xs font-mono text-muted-foreground px-1.5">
                       +{dayTasks.length - 3} more
                     </p>
                   )}
@@ -127,7 +138,7 @@ export function TaskCalendar({ tasks }: TaskCalendarProps) {
             );
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
