@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface StatsCardProps {
@@ -12,26 +11,36 @@ interface StatsCardProps {
 
 export function StatsCard({ title, value, icon, trend, className }: StatsCardProps) {
   return (
-    <Card className={cn('animate-fade-in', className)}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-semibold text-foreground mt-2">{value}</p>
-            {trend && (
-              <p className={cn(
-                'text-sm mt-2',
-                trend.positive ? 'text-success' : 'text-destructive'
-              )}>
-                {trend.positive ? '+' : ''}{trend.value}% from last month
-              </p>
-            )}
-          </div>
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-            {icon}
-          </div>
+    <div 
+      className={cn(
+        'border-2 border-foreground bg-card p-4 shadow-brutal',
+        'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-lg',
+        'active:translate-x-0 active:translate-y-0 active:shadow-brutal-sm',
+        'transition-all duration-150 animate-fade-in',
+        className
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground truncate">
+            {title}
+          </p>
+          <p className="text-xl md:text-2xl font-mono font-bold text-foreground mt-2 truncate">
+            {value}
+          </p>
+          {trend && (
+            <p className={cn(
+              'text-xs font-mono mt-2',
+              trend.positive ? 'text-success' : 'text-destructive'
+            )}>
+              {trend.positive ? '↑' : '↓'} {Math.abs(trend.value)}% from last month
+            </p>
+          )}
         </div>
-      </CardContent>
-    </Card>
+        <div className="h-10 w-10 border-2 border-foreground bg-accent flex items-center justify-center shrink-0">
+          {icon}
+        </div>
+      </div>
+    </div>
   );
 }

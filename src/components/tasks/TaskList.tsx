@@ -1,6 +1,5 @@
 import { Task } from '@/types';
 import { TaskItem } from './TaskItem';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface TaskListProps {
   tasks: Task[];
@@ -10,26 +9,30 @@ interface TaskListProps {
 
 export function TaskList({ tasks, title = 'Tasks' }: TaskListProps) {
   return (
-    <Card className="animate-fade-in">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center justify-between">
-          {title}
-          <span className="text-sm font-normal text-muted-foreground">
-            {tasks.length} task{tasks.length !== 1 ? 's' : ''}
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="border-2 border-foreground bg-card shadow-brutal animate-fade-in">
+      <div className="border-b-2 border-foreground p-4 flex items-center justify-between">
+        <h3 className="font-mono font-bold uppercase tracking-wider">{title}</h3>
+        <span className="text-sm font-mono text-muted-foreground border-2 border-foreground px-2 py-0.5 bg-muted">
+          {tasks.length}
+        </span>
+      </div>
+      <div className="p-4">
         {tasks.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No tasks yet</p>
+          <p className="text-muted-foreground font-mono text-center py-8">No tasks yet</p>
         ) : (
-          <div className="space-y-1">
-            {tasks.map((task) => (
-              <TaskItem key={task.id} task={task} />
+          <div className="space-y-2">
+            {tasks.map((task, index) => (
+              <div 
+                key={task.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 30}ms` }}
+              >
+                <TaskItem task={task} />
+              </div>
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

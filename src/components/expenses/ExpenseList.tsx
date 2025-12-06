@@ -1,6 +1,5 @@
 import { Expense } from '@/types';
 import { ExpenseItem } from './ExpenseItem';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -18,26 +17,30 @@ export function ExpenseList({ expenses, title = 'Expenses' }: ExpenseListProps) 
   };
 
   return (
-    <Card className="animate-fade-in">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center justify-between">
-          {title}
-          <span className="text-sm font-mono font-semibold text-primary">
-            {formatCurrency(totalAmount)}
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="border-2 border-foreground bg-card shadow-brutal animate-fade-in">
+      <div className="border-b-2 border-foreground p-4 flex items-center justify-between">
+        <h3 className="font-mono font-bold uppercase tracking-wider">{title}</h3>
+        <span className="text-sm font-mono font-bold text-primary border-2 border-foreground px-2 py-0.5 bg-accent">
+          {formatCurrency(totalAmount)}
+        </span>
+      </div>
+      <div className="p-4">
         {expenses.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No expenses yet</p>
+          <p className="text-muted-foreground font-mono text-center py-8">No expenses yet</p>
         ) : (
-          <div className="divide-y divide-border">
-            {expenses.map((expense) => (
-              <ExpenseItem key={expense.id} expense={expense} />
+          <div className="divide-y-2 divide-foreground border-2 border-foreground">
+            {expenses.map((expense, index) => (
+              <div
+                key={expense.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 30}ms` }}
+              >
+                <ExpenseItem expense={expense} />
+              </div>
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

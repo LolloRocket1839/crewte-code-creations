@@ -1,13 +1,12 @@
 import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Expense } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ExpenseChartProps {
   expenses: Expense[];
 }
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1', '#EF4444', '#14B8A6'];
+const COLORS = ['#000000', '#404040', '#666666', '#808080', '#999999', '#B3B3B3', '#CCCCCC', '#E6E6E6'];
 
 export function ExpenseChart({ expenses }: ExpenseChartProps) {
   const chartData = useMemo(() => {
@@ -34,25 +33,25 @@ export function ExpenseChart({ expenses }: ExpenseChartProps) {
 
   if (chartData.length === 0) {
     return (
-      <Card className="animate-fade-in">
-        <CardHeader>
-          <CardTitle className="text-lg">Expenses by Category</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+      <div className="border-2 border-foreground bg-card shadow-brutal animate-fade-in">
+        <div className="border-b-2 border-foreground p-4">
+          <h3 className="font-mono font-bold uppercase tracking-wider">Expenses by Category</h3>
+        </div>
+        <div className="p-4">
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground font-mono">
             No expenses to display
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="animate-fade-in">
-      <CardHeader>
-        <CardTitle className="text-lg">Expenses by Category</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="border-2 border-foreground bg-card shadow-brutal animate-fade-in">
+      <div className="border-b-2 border-foreground p-4">
+        <h3 className="font-mono font-bold uppercase tracking-wider">Expenses by Category</h3>
+      </div>
+      <div className="p-4">
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -64,6 +63,8 @@ export function ExpenseChart({ expenses }: ExpenseChartProps) {
                 outerRadius={100}
                 paddingAngle={2}
                 dataKey="value"
+                stroke="hsl(var(--foreground))"
+                strokeWidth={2}
               >
                 {chartData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -73,17 +74,20 @@ export function ExpenseChart({ expenses }: ExpenseChartProps) {
                 formatter={(value: number) => formatCurrency(value)}
                 contentStyle={{
                   backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
+                  border: '2px solid hsl(var(--foreground))',
+                  borderRadius: '0',
+                  fontFamily: 'JetBrains Mono, Space Mono, monospace',
                 }}
               />
               <Legend
-                formatter={(value) => <span className="text-sm text-foreground">{value}</span>}
+                formatter={(value) => (
+                  <span className="text-sm font-mono text-foreground">{value}</span>
+                )}
               />
             </PieChart>
           </ResponsiveContainer>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

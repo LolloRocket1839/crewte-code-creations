@@ -1,6 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
 import { CheckCircle2, PlusCircle, Pencil, FolderKanban, ListTodo, Receipt } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useActivity } from '@/hooks/useActivity';
 import { ActivityLog } from '@/types';
 import { cn } from '@/lib/utils';
@@ -39,10 +38,10 @@ const getActivityText = (activity: ActivityLog) => {
   const entityName = activity.entity_name;
   
   return (
-    <span>
-      <span className="capitalize font-medium">{action}</span>{' '}
+    <span className="font-mono text-sm">
+      <span className="capitalize font-bold">{action}</span>{' '}
       {entityType}{' '}
-      {entityName && <span className="font-medium">"{entityName}"</span>}
+      {entityName && <span className="font-bold">"{entityName}"</span>}
     </span>
   );
 };
@@ -52,53 +51,55 @@ export function ActivityFeed() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-3 animate-pulse">
-                <div className="h-8 w-8 rounded-full bg-muted" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-3 bg-muted rounded w-1/4" />
-                </div>
+      <div className="border-2 border-foreground bg-card shadow-brutal animate-fade-in">
+        <div className="border-b-2 border-foreground p-4">
+          <h3 className="font-mono font-bold uppercase tracking-wider">Recent Activity</h3>
+        </div>
+        <div className="p-4 space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex gap-3 animate-pulse">
+              <div className="h-8 w-8 border-2 border-muted bg-muted" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-muted w-3/4" />
+                <div className="h-3 bg-muted w-1/4" />
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="animate-fade-in">
-      <CardHeader>
-        <CardTitle className="text-lg">Recent Activity</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="border-2 border-foreground bg-card shadow-brutal animate-fade-in">
+      <div className="border-b-2 border-foreground p-4">
+        <h3 className="font-mono font-bold uppercase tracking-wider">Recent Activity</h3>
+      </div>
+      <div className="p-4">
         {activities.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No activity yet</p>
+          <p className="text-muted-foreground font-mono text-center py-8">No activity yet</p>
         ) : (
-          <div className="space-y-4">
-            {activities.map((activity) => (
-              <div key={activity.id} className="flex gap-3 animate-slide-in">
-                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+          <div className="space-y-3">
+            {activities.map((activity, index) => (
+              <div 
+                key={activity.id} 
+                className="flex gap-3 p-2 border-2 border-transparent hover:border-foreground hover:bg-muted/50 transition-all animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="h-8 w-8 border-2 border-foreground bg-muted flex items-center justify-center shrink-0">
                   {getActivityIcon(activity)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground">
+                  <p className="text-foreground">
                     {getActivityText(activity)}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span className="text-xs font-mono text-muted-foreground flex items-center gap-1">
                       {getEntityIcon(activity.entity_type)}
                       {activity.entity_type}
                     </span>
-                    <span className="text-xs text-muted-foreground">·</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <span className="text-xs font-mono text-muted-foreground">
                       {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
                     </span>
                   </div>
@@ -107,7 +108,7 @@ export function ActivityFeed() {
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
