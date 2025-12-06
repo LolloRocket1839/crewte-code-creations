@@ -11,18 +11,21 @@ import { Project, ProjectMember } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface ShareProjectDialogProps {
-  project: Project;
+  project?: Project;
+  projectId?: string;
+  children?: React.ReactNode;
 }
 
-export function ShareProjectDialog({ project }: ShareProjectDialogProps) {
+export function ShareProjectDialog({ project, projectId, children }: ShareProjectDialogProps) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'viewer' | 'editor' | 'admin'>('viewer');
   
   const { user } = useAuth();
-  const { members, addMember, updateMemberRole, removeMember } = useProjectMembers(project.id);
+  const actualProjectId = project?.id || projectId;
+  const { members, addMember, updateMemberRole, removeMember } = useProjectMembers(actualProjectId);
   
-  const isOwner = user?.id === project.user_id;
+  const isOwner = project ? user?.id === project.user_id : true;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,9 +45,11 @@ export function ShareProjectDialog({ project }: ShareProjectDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="h-8 w-8 shrink-0">
-          <Users className="h-4 w-4" />
-        </Button>
+        {children || (
+          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0">
+            <Users className="h-4 w-4" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -98,7 +103,7 @@ export function ShareProjectDialog({ project }: ShareProjectDialogProps) {
                 <div>
                   <p className="font-mono text-sm font-bold">Owner</p>
                   <p className="font-mono text-xs text-muted-foreground">
-                    {user?.id === project.user_id ? 'You' : 'Project owner'}
+                    {isOwner ? 'You' : 'Project owner'}
                   </p>
                 </div>
               </div>
