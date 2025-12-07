@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, RefObject } from 'react';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,9 +14,11 @@ import { ReceiptUpload } from './ReceiptUpload';
 
 interface EditExpenseDialogProps {
   expense: Expense;
+  triggerRef?: RefObject<HTMLButtonElement>;
+  hideTrigger?: boolean;
 }
 
-export function EditExpenseDialog({ expense }: EditExpenseDialogProps) {
+export function EditExpenseDialog({ expense, triggerRef, hideTrigger }: EditExpenseDialogProps) {
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState(expense.description);
   const [amount, setAmount] = useState(expense.amount.toString());
@@ -71,10 +73,14 @@ export function EditExpenseDialog({ expense }: EditExpenseDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
+          ref={triggerRef}
           variant="ghost"
           size="icon"
           aria-label="Modifica spesa"
-          className="h-11 w-11 text-muted-foreground hover:text-foreground hover:bg-muted border-2 border-transparent hover:border-foreground focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground touch-action-manipulation"
+          className={hideTrigger 
+            ? "sr-only" 
+            : "h-11 w-11 text-muted-foreground hover:text-foreground hover:bg-muted border-2 border-transparent hover:border-foreground focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground touch-action-manipulation"
+          }
         >
           <Pencil className="h-5 w-5" aria-hidden="true" />
         </Button>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, RefObject } from 'react';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,9 +13,11 @@ import { Revenue, CURRENCIES, Currency } from '@/types';
 
 interface EditRevenueDialogProps {
   revenue: Revenue;
+  triggerRef?: RefObject<HTMLButtonElement>;
+  hideTrigger?: boolean;
 }
 
-export function EditRevenueDialog({ revenue }: EditRevenueDialogProps) {
+export function EditRevenueDialog({ revenue, triggerRef, hideTrigger }: EditRevenueDialogProps) {
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState(revenue.description);
   const [amount, setAmount] = useState(revenue.amount.toString());
@@ -70,10 +72,14 @@ export function EditRevenueDialog({ revenue }: EditRevenueDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
+          ref={triggerRef}
           variant="ghost"
           size="icon"
           aria-label="Modifica entrata"
-          className="h-11 w-11 text-muted-foreground hover:text-foreground hover:bg-muted border-2 border-transparent hover:border-foreground focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground touch-action-manipulation"
+          className={hideTrigger 
+            ? "sr-only" 
+            : "h-11 w-11 text-muted-foreground hover:text-foreground hover:bg-muted border-2 border-transparent hover:border-foreground focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground touch-action-manipulation"
+          }
         >
           <Pencil className="h-5 w-5" aria-hidden="true" />
         </Button>
