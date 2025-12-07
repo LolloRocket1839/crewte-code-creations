@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, Upload, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useProjects } from '@/hooks/useProjects';
 import { useReceiptUpload } from '@/hooks/useReceiptUpload';
+import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { CURRENCIES, Currency } from '@/types';
 
 interface CreateExpenseDialogProps {
@@ -17,10 +18,16 @@ interface CreateExpenseDialogProps {
 }
 
 export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
+  const { defaultCurrency } = useUserCurrency();
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<Currency>('EUR');
+  const [currency, setCurrency] = useState<Currency>(defaultCurrency);
+  
+  // Update currency when defaultCurrency changes (after profile loads)
+  useEffect(() => {
+    setCurrency(defaultCurrency);
+  }, [defaultCurrency]);
   const [categoryId, setCategoryId] = useState('');
   const [selectedProject, setSelectedProject] = useState(projectId || '');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -81,7 +88,7 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
   const resetForm = () => {
     setDescription('');
     setAmount('');
-    setCurrency('EUR');
+    setCurrency(defaultCurrency);
     setCategoryId('');
     setDate(new Date().toISOString().split('T')[0]);
     setIsPaid(false);
