@@ -149,10 +149,10 @@ export function ExpenseItem({ expense, index = 0 }: ExpenseItemProps) {
         </Button>
       )}
       
-      {/* Actions - Slide in from right */}
+      {/* Actions - Always visible on mobile, slide in on desktop */}
       <div className={cn(
         'flex items-center gap-1',
-        'translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100',
+        'md:translate-x-2 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100',
         'transition-all duration-200 ease-out'
       )}>
         <EditExpenseDialog expense={expense} />
