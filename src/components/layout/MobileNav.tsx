@@ -1,12 +1,13 @@
-import { LayoutDashboard, FolderKanban, Calendar, FileBarChart } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Calendar, FileBarChart, Settings } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { title: 'Home', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'Projects', url: '/projects', icon: FolderKanban },
-  { title: 'Calendar', url: '/calendar', icon: Calendar },
-  { title: 'Reports', url: '/reports', icon: FileBarChart },
+  { title: 'Progetti', url: '/projects', icon: FolderKanban },
+  { title: 'Calendario', url: '/calendar', icon: Calendar },
+  { title: 'Report', url: '/reports', icon: FileBarChart },
+  { title: 'Altro', url: '/settings', icon: Settings },
 ];
 
 export function MobileNav() {

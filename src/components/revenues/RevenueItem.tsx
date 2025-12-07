@@ -82,7 +82,8 @@ export function RevenueItem({ revenue }: RevenueItemProps) {
         </p>
       </div>
       
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+      {/* Actions - Always visible on mobile, fade in on desktop */}
+      <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
         <EditRevenueDialog revenue={revenue} />
         <Button
           variant="ghost"

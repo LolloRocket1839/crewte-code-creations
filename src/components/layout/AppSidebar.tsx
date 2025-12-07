@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderKanban, Calendar, FileBarChart, LogOut } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Calendar, FileBarChart, Settings } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -12,7 +12,6 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -20,6 +19,7 @@ const navItems = [
   { title: 'Projects', url: '/projects', icon: FolderKanban },
   { title: 'Calendar', url: '/calendar', icon: Calendar },
   { title: 'Reports', url: '/reports', icon: FileBarChart },
+  { title: 'Settings', url: '/settings', icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -63,7 +63,11 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t-2 border-sidebar-border">
-        <div className="flex items-center gap-3 px-2 py-2">
+        <NavLink
+          to="/settings"
+          className="flex items-center gap-3 px-2 py-2 border-2 border-transparent hover:border-sidebar-border hover:bg-sidebar-accent transition-all"
+          activeClassName="border-sidebar-border bg-sidebar-accent"
+        >
           <div className="h-10 w-10 border-2 border-foreground bg-secondary flex items-center justify-center">
             <span className="text-sm font-bold uppercase">
               {user?.email?.charAt(0).toUpperCase()}
@@ -73,16 +77,11 @@ export function AppSidebar() {
             <p className="text-xs font-semibold text-sidebar-foreground truncate uppercase tracking-wide">
               {user?.email?.split('@')[0]}
             </p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              Impostazioni
+            </p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={signOut}
-            className="h-10 w-10 border-2 border-transparent hover:border-foreground"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
+        </NavLink>
       </SidebarFooter>
     </Sidebar>
   );
