@@ -5,6 +5,7 @@ import { Revenue, getCurrencySymbol } from '@/types';
 import { useRevenues } from '@/hooks/useRevenues';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { EditRevenueDialog } from './EditRevenueDialog';
 
 interface RevenueItemProps {
   revenue: Revenue;
@@ -81,14 +82,17 @@ export function RevenueItem({ revenue }: RevenueItemProps) {
         </p>
       </div>
       
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-2 border-transparent hover:border-destructive shrink-0"
-        onClick={() => deleteRevenue.mutate(revenue.id)}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <EditRevenueDialog revenue={revenue} />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-2 border-transparent hover:border-destructive"
+          onClick={() => deleteRevenue.mutate(revenue.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }
