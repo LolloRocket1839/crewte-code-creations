@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileJson, AlertCircle, Check } from 'lucide-react';
-import { useProjectImportExport } from '@/hooks/useProjectImportExport';
+import { useProjectImportExport, ImportFormat, ImportPreview } from '@/hooks/useProjectImportExport';
 import {
   Dialog,
   DialogContent,
@@ -10,18 +10,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface ImportProjectDialogProps {
   children?: React.ReactNode;
-}
-
-interface PreviewData {
-  projectName: string;
-  expensesCount: number;
-  revenuesCount: number;
-  tasksCount: number;
-  expenseCategoriesCount: number;
-  revenueCategoriesCount: number;
 }
 
 export function ImportProjectDialog({ children }: ImportProjectDialogProps) {
@@ -30,13 +22,15 @@ export function ImportProjectDialog({ children }: ImportProjectDialogProps) {
   const [open, setOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<PreviewData | null>(null);
+  const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [jsonData, setJsonData] = useState<any>(null);
+  const [detectedFormat, setDetectedFormat] = useState<ImportFormat | null>(null);
 
   const resetState = () => {
     setError(null);
     setPreview(null);
     setJsonData(null);
+    setDetectedFormat(null);
   };
 
   const processFile = async (file: File) => {
@@ -51,20 +45,16 @@ export function ImportProjectDialog({ children }: ImportProjectDialogProps) {
       const text = await file.text();
       const data = JSON.parse(text);
 
-      if (!validateImportData(data)) {
-        setError('Invalid file format. Please use a Cost Ledger Pro export file.');
+      const validation = validateImportData(data);
+      
+      if (!validation.valid || !validation.format || !validation.preview) {
+        setError('Invalid file format. Please use a Cost Ledger Pro export file or a compatible legacy format.');
         return;
       }
 
       setJsonData(data);
-      setPreview({
-        projectName: data.project.name,
-        expensesCount: data.expenses.length,
-        revenuesCount: data.revenues.length,
-        tasksCount: data.tasks.length,
-        expenseCategoriesCount: data.expenseCategories?.length || 0,
-        revenueCategoriesCount: data.revenueCategories?.length || 0,
-      });
+      setDetectedFormat(validation.format);
+      setPreview(validation.preview);
     } catch (e) {
       setError('Failed to parse JSON file');
     }
@@ -93,14 +83,16 @@ export function ImportProjectDialog({ children }: ImportProjectDialogProps) {
   }, []);
 
   const handleImport = async () => {
-    if (!jsonData) return;
-    const projectId = await importProject(jsonData);
+    if (!jsonData || !detectedFormat) return;
+    const projectId = await importProject(jsonData, detectedFormat);
     if (projectId) {
       setOpen(false);
       resetState();
       navigate(`/projects/${projectId}`);
     }
   };
+
+  const formatLabel = detectedFormat === 'legacy' ? 'Legacy Format' : 'Cost Ledger Pro';
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetState(); }}>
@@ -154,9 +146,14 @@ export function ImportProjectDialog({ children }: ImportProjectDialogProps) {
           {/* Preview */}
           {preview && (
             <div className="border-2 border-foreground bg-card p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-success" />
-                <span className="font-mono text-sm font-bold">File valid</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-success" />
+                  <span className="font-mono text-sm font-bold">File valid</span>
+                </div>
+                <Badge variant="secondary" className="font-mono text-xs">
+                  {formatLabel}
+                </Badge>
               </div>
               
               <div className="space-y-2 font-mono text-sm">

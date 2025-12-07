@@ -4,7 +4,8 @@ import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
-interface ExportedProject {
+// Internal normalized format
+interface NormalizedProject {
   version: string;
   exportedAt: string;
   app: string;
@@ -43,6 +44,173 @@ interface ExportedProject {
     status: string;
     due_date: string | null;
   }>;
+}
+
+// Legacy format types
+interface LegacyExpense {
+  id?: string;
+  amount: number;
+  currency: string;
+  date: string;
+  recipient: string;
+  category: string;
+  notes: string | null;
+  paid: boolean;
+  paid_date?: string | null;
+  attachment_name?: string | null;
+  created_at?: string;
+}
+
+interface LegacyRevenue {
+  id?: string;
+  amount: number;
+  currency: string;
+  date: string;
+  source: string;
+  category: string;
+  notes: string | null;
+  received: boolean;
+  received_date?: string | null;
+  is_recurring: boolean;
+  recurring_frequency?: string | null;
+  recurring_day?: number | null;
+  attachment_name?: string | null;
+  created_at?: string;
+}
+
+interface LegacyProject {
+  project: {
+    id?: string;
+    name: string;
+    investment_amount?: number;
+    property_value?: number;
+    created_at?: string;
+  };
+  summary?: object;
+  metrics?: object;
+  expenses: LegacyExpense[];
+  revenues: LegacyRevenue[];
+  export_date?: string;
+  export_version?: string;
+}
+
+export type ImportFormat = 'cost-ledger-pro' | 'legacy';
+
+export interface ImportPreview {
+  format: ImportFormat;
+  projectName: string;
+  expensesCount: number;
+  revenuesCount: number;
+  tasksCount: number;
+  expenseCategoriesCount: number;
+  revenueCategoriesCount: number;
+}
+
+// Detect the format of the imported data
+function detectFormat(data: any): ImportFormat | null {
+  if (!data || typeof data !== 'object') return null;
+  
+  // Cost Ledger Pro format has 'app' field and structured categories
+  if (data.app === 'Cost Ledger Pro' && Array.isArray(data.expenseCategories)) {
+    return 'cost-ledger-pro';
+  }
+  
+  // Legacy format has 'recipient' in expenses and 'source' in revenues
+  if (data.project && Array.isArray(data.expenses)) {
+    const firstExpense = data.expenses[0];
+    if (firstExpense && 'recipient' in firstExpense) {
+      return 'legacy';
+    }
+  }
+  
+  // Fallback: check for Cost Ledger Pro format without app field
+  if (data.project && Array.isArray(data.expenses) && Array.isArray(data.tasks)) {
+    const firstExpense = data.expenses[0];
+    if (firstExpense && 'categoryName' in firstExpense) {
+      return 'cost-ledger-pro';
+    }
+  }
+  
+  return null;
+}
+
+// Extract unique categories from legacy format
+function extractCategoriesFromLegacy(data: LegacyProject): {
+  expenseCategories: Array<{ name: string; color: string }>;
+  revenueCategories: Array<{ name: string; color: string }>;
+} {
+  const expenseCategories = [...new Set(data.expenses.map(e => e.category).filter(Boolean))]
+    .map(name => ({ name, color: '#6B7280' }));
+  
+  const revenueCategories = [...new Set(data.revenues.map(r => r.category).filter(Boolean))]
+    .map(name => ({ name, color: '#10B981' }));
+  
+  return { expenseCategories, revenueCategories };
+}
+
+// Normalize legacy format to internal format
+function normalizeLegacyData(data: LegacyProject): NormalizedProject {
+  const { expenseCategories, revenueCategories } = extractCategoriesFromLegacy(data);
+  
+  return {
+    version: data.export_version || '1.0',
+    exportedAt: data.export_date || new Date().toISOString(),
+    app: 'Legacy Import',
+    project: {
+      name: data.project.name,
+      description: null,
+      budget: data.project.investment_amount || 0,
+      status: 'active',
+    },
+    expenseCategories,
+    revenueCategories,
+    expenses: data.expenses.map(e => ({
+      description: e.recipient,
+      amount: e.amount,
+      currency: e.currency,
+      date: e.date,
+      categoryName: e.category || null,
+      is_paid: e.paid,
+      notes: e.notes,
+    })),
+    revenues: data.revenues.map(r => ({
+      description: r.source,
+      amount: r.amount,
+      currency: r.currency,
+      date: r.date,
+      categoryName: r.category || null,
+      is_recurring: r.is_recurring,
+      recurrence_type: r.recurring_frequency || null,
+      recurrence_day: r.recurring_day || null,
+      notes: r.notes,
+    })),
+    tasks: [], // Legacy format doesn't have tasks
+  };
+}
+
+// Normalize any supported format to internal format
+function normalizeImportData(data: any, format: ImportFormat): NormalizedProject {
+  if (format === 'legacy') {
+    return normalizeLegacyData(data as LegacyProject);
+  }
+  
+  // Cost Ledger Pro format is already normalized
+  return {
+    version: data.version || '1.0',
+    exportedAt: data.exportedAt || new Date().toISOString(),
+    app: data.app || 'Cost Ledger Pro',
+    project: {
+      name: data.project.name,
+      description: data.project.description || null,
+      budget: data.project.budget || 0,
+      status: data.project.status || 'active',
+    },
+    expenseCategories: data.expenseCategories || [],
+    revenueCategories: data.revenueCategories || [],
+    expenses: data.expenses || [],
+    revenues: data.revenues || [],
+    tasks: data.tasks || [],
+  };
 }
 
 export function useProjectImportExport() {
@@ -93,7 +261,6 @@ export function useProjectImportExport() {
       // Get unique expense categories
       const expenseCategories = [...new Set(expenses?.map(e => e.expense_categories?.name).filter(Boolean))]
         .map(name => {
-          const expense = expenses?.find(e => e.expense_categories?.name === name);
           return { name: name as string, color: '#6B7280' };
         });
 
@@ -101,7 +268,7 @@ export function useProjectImportExport() {
       const revenueCategories = [...new Set(revenues?.map(r => r.revenue_categories?.name).filter(Boolean))]
         .map(name => ({ name: name as string, color: '#10B981' }));
 
-      const exportData: ExportedProject = {
+      const exportData: NormalizedProject = {
         version: '1.0',
         exportedAt: new Date().toISOString(),
         app: 'Cost Ledger Pro',
@@ -163,29 +330,46 @@ export function useProjectImportExport() {
     }
   };
 
-  const validateImportData = (data: any): data is ExportedProject => {
-    if (!data || typeof data !== 'object') return false;
-    if (!data.project || typeof data.project.name !== 'string') return false;
-    if (!Array.isArray(data.expenses)) return false;
-    if (!Array.isArray(data.revenues)) return false;
-    if (!Array.isArray(data.tasks)) return false;
-    return true;
+  const validateImportData = (data: any): { valid: boolean; format: ImportFormat | null; preview: ImportPreview | null } => {
+    const format = detectFormat(data);
+    
+    if (!format) {
+      return { valid: false, format: null, preview: null };
+    }
+    
+    const normalized = normalizeImportData(data, format);
+    
+    return {
+      valid: true,
+      format,
+      preview: {
+        format,
+        projectName: normalized.project.name,
+        expensesCount: normalized.expenses.length,
+        revenuesCount: normalized.revenues.length,
+        tasksCount: normalized.tasks.length,
+        expenseCategoriesCount: normalized.expenseCategories.length,
+        revenueCategoriesCount: normalized.revenueCategories.length,
+      },
+    };
   };
 
-  const importProject = async (data: ExportedProject) => {
+  const importProject = async (data: any, format: ImportFormat) => {
     if (!user) return null;
     setIsImporting(true);
 
     try {
+      const normalized = normalizeImportData(data, format);
+      
       // Create expense categories
       const expenseCategoryMap: Record<string, string> = {};
-      for (const cat of data.expenseCategories || []) {
+      for (const cat of normalized.expenseCategories) {
         const { data: existing } = await supabase
           .from('expense_categories')
           .select('id')
           .eq('user_id', user.id)
           .eq('name', cat.name)
-          .single();
+          .maybeSingle();
 
         if (existing) {
           expenseCategoryMap[cat.name] = existing.id;
@@ -203,13 +387,13 @@ export function useProjectImportExport() {
 
       // Create revenue categories
       const revenueCategoryMap: Record<string, string> = {};
-      for (const cat of data.revenueCategories || []) {
+      for (const cat of normalized.revenueCategories) {
         const { data: existing } = await supabase
           .from('revenue_categories')
           .select('id')
           .eq('user_id', user.id)
           .eq('name', cat.name)
-          .single();
+          .maybeSingle();
 
         if (existing) {
           revenueCategoryMap[cat.name] = existing.id;
@@ -229,10 +413,10 @@ export function useProjectImportExport() {
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert({
-          name: data.project.name,
-          description: data.project.description,
-          budget: data.project.budget,
-          status: data.project.status,
+          name: normalized.project.name,
+          description: normalized.project.description,
+          budget: normalized.project.budget,
+          status: normalized.project.status,
           user_id: user.id,
         })
         .select()
@@ -241,8 +425,8 @@ export function useProjectImportExport() {
       if (projectError) throw projectError;
 
       // Create expenses
-      if (data.expenses.length > 0) {
-        const expensesToInsert = data.expenses.map(e => ({
+      if (normalized.expenses.length > 0) {
+        const expensesToInsert = normalized.expenses.map(e => ({
           description: e.description,
           amount: e.amount,
           currency: e.currency || 'EUR',
@@ -257,8 +441,8 @@ export function useProjectImportExport() {
       }
 
       // Create revenues
-      if (data.revenues.length > 0) {
-        const revenuesToInsert = data.revenues.map(r => ({
+      if (normalized.revenues.length > 0) {
+        const revenuesToInsert = normalized.revenues.map(r => ({
           description: r.description,
           amount: r.amount,
           currency: r.currency || 'EUR',
@@ -275,8 +459,8 @@ export function useProjectImportExport() {
       }
 
       // Create tasks
-      if (data.tasks.length > 0) {
-        const tasksToInsert = data.tasks.map(t => ({
+      if (normalized.tasks.length > 0) {
+        const tasksToInsert = normalized.tasks.map(t => ({
           title: t.title,
           description: t.description,
           priority: t.priority || 'medium',
