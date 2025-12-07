@@ -115,10 +115,34 @@ function detectFormat(data: any): ImportFormat | null {
     return 'cost-ledger-pro';
   }
   
-  // Legacy format has 'recipient' in expenses and 'source' in revenues
-  if (data.project && Array.isArray(data.expenses)) {
-    const firstExpense = data.expenses[0];
-    if (firstExpense && 'recipient' in firstExpense) {
+  // Legacy format detection:
+  // - Has 'project' object with 'name'
+  // - Has 'expenses' array OR 'revenues' array
+  // - Expenses have 'recipient' field OR revenues have 'source' field
+  if (data.project && typeof data.project === 'object' && data.project.name) {
+    // Check expenses for legacy format indicators
+    if (Array.isArray(data.expenses) && data.expenses.length > 0) {
+      const firstExpense = data.expenses[0];
+      if ('recipient' in firstExpense || 'paid' in firstExpense) {
+        return 'legacy';
+      }
+    }
+    
+    // Check revenues for legacy format indicators
+    if (Array.isArray(data.revenues) && data.revenues.length > 0) {
+      const firstRevenue = data.revenues[0];
+      if ('source' in firstRevenue || 'received' in firstRevenue) {
+        return 'legacy';
+      }
+    }
+    
+    // If has project with investment_amount or property_value, it's legacy
+    if ('investment_amount' in data.project || 'property_value' in data.project) {
+      return 'legacy';
+    }
+    
+    // If has summary or metrics objects, it's legacy
+    if (data.summary || data.metrics) {
       return 'legacy';
     }
   }
