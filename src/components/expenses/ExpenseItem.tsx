@@ -34,139 +34,139 @@ export function ExpenseItem({ expense, index = 0 }: ExpenseItemProps) {
   return (
     <div 
       className={cn(
-        'group flex items-center gap-3 p-4 border-b-2 border-border/50 last:border-b-0',
+        'group p-3 sm:p-4 border-b-2 border-border/50 last:border-b-0',
         'transition-all duration-200 ease-out',
         'hover:bg-muted/30 hover:border-foreground/20',
         'animate-fade-in'
       )}
       style={{ animationDelay: `${index * 50}ms` }}
     >
-      {/* Paid Status Toggle */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn(
-          'h-9 w-9 shrink-0 border-2 transition-all duration-200',
-          expense.is_paid 
-            ? 'border-success bg-success/10 text-success hover:bg-success/20 hover:scale-105' 
-            : 'border-muted-foreground/30 text-muted-foreground hover:border-foreground hover:text-foreground hover:scale-105',
-          'active:scale-95'
-        )}
-        onClick={handleTogglePaid}
-        disabled={togglePaidStatus.isPending}
-      >
-        {expense.is_paid ? (
-          <Check className="h-4 w-4 animate-check-bounce" />
-        ) : (
-          <X className="h-4 w-4" />
-        )}
-      </Button>
-      
-      {/* Category Color */}
-      <div
-        className={cn(
-          'h-10 w-10 border-2 border-foreground flex items-center justify-center shrink-0 font-mono font-bold text-sm',
-          'transition-transform duration-200 ease-out',
-          'group-hover:scale-105 group-hover:shadow-brutal-sm'
-        )}
-        style={{ 
-          backgroundColor: expense.category?.color || 'hsl(var(--muted))',
-          color: expense.category?.color ? '#fff' : 'hsl(var(--foreground))'
-        }}
-      >
-        {expense.category?.name?.charAt(0).toUpperCase() || '$'}
-      </div>
-      
-      {/* Description & Meta */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className={cn(
-            'text-sm font-mono font-medium truncate transition-all duration-200',
-            expense.is_paid ? 'text-muted-foreground line-through' : 'text-foreground'
-          )}>
-            {expense.description}
-          </p>
-          {!expense.is_paid && (
-            <Badge 
-              variant="destructive" 
-              className="shrink-0 text-[10px] px-1.5 py-0 animate-pulse border-2 border-destructive"
-            >
-              Non pagato
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-2 mt-1">
-          {expense.category && (
-            <span className="text-xs font-mono text-muted-foreground">
-              {expense.category.name}
-            </span>
-          )}
-          {expense.project && (
-            <>
-              <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs font-mono text-muted-foreground">
-                {expense.project.name}
-              </span>
-            </>
-          )}
-          {expense.notes && (
-            <>
-              <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs font-mono text-muted-foreground/70 truncate max-w-[100px]">
-                {expense.notes}
-              </span>
-            </>
-          )}
-        </div>
-      </div>
-      
-      {/* Amount & Date */}
-      <div className="text-right shrink-0">
-        <p className={cn(
-          'text-sm font-mono font-bold transition-colors duration-200',
-          expense.is_paid ? 'text-muted-foreground' : 'text-destructive'
-        )}>
-          -{formatCurrency(Number(expense.amount), expense.currency)}
-        </p>
-        <p className="text-xs font-mono text-muted-foreground">
-          {format(new Date(expense.date), 'd MMM yyyy', { locale: it })}
-        </p>
-      </div>
-      
-      {/* Receipt Icon */}
-      {expense.receipt_url && (
+      {/* Mobile: Stacked layout, Desktop: Horizontal */}
+      <div className="flex items-start gap-3">
+        {/* Paid Status Toggle - WCAG 44px touch target */}
         <Button
           variant="ghost"
           size="icon"
+          aria-label={expense.is_paid ? "Segna come non pagato" : "Segna come pagato"}
           className={cn(
-            'h-9 w-9 text-accent border-2 border-transparent shrink-0',
-            'hover:border-accent hover:bg-accent/10 hover:scale-105',
-            'transition-all duration-200 active:scale-95'
+            'h-11 w-11 shrink-0 border-2 transition-all duration-200 touch-action-manipulation',
+            'focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground',
+            expense.is_paid 
+              ? 'border-success bg-success/10 text-success hover:bg-success/20' 
+              : 'border-muted-foreground/30 text-muted-foreground hover:border-foreground hover:text-foreground',
           )}
-          onClick={() => setPreviewOpen(true)}
+          onClick={handleTogglePaid}
+          disabled={togglePaidStatus.isPending}
         >
-          <Paperclip className="h-4 w-4" />
+          {expense.is_paid ? (
+            <Check className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <X className="h-5 w-5" aria-hidden="true" />
+          )}
         </Button>
-      )}
+        
+        {/* Category Color */}
+        <div
+          className={cn(
+            'h-11 w-11 border-2 border-foreground flex items-center justify-center shrink-0 font-mono font-bold text-sm',
+            'transition-transform duration-200 ease-out'
+          )}
+          style={{ 
+            backgroundColor: expense.category?.color || 'hsl(var(--muted))',
+            color: expense.category?.color ? '#fff' : 'hsl(var(--foreground))'
+          }}
+          aria-hidden="true"
+        >
+          {expense.category?.name?.charAt(0).toUpperCase() || '$'}
+        </div>
+        
+        {/* Content area - grows to fill */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
+          {/* Top row: Description + Amount */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className={cn(
+                'text-sm font-mono font-medium truncate transition-all duration-200',
+                expense.is_paid ? 'text-muted-foreground line-through' : 'text-foreground'
+              )}>
+                {expense.description}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className={cn(
+                'text-sm font-mono font-bold transition-colors duration-200',
+                expense.is_paid ? 'text-muted-foreground' : 'text-destructive'
+              )}>
+                -{formatCurrency(Number(expense.amount), expense.currency)}
+              </p>
+            </div>
+          </div>
+          
+          {/* Bottom row: Meta info */}
+          <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+            {!expense.is_paid && (
+              <Badge 
+                variant="destructive" 
+                className="text-[10px] px-1.5 py-0 animate-pulse border-2 border-destructive"
+              >
+                Non pagato
+              </Badge>
+            )}
+            {expense.category && (
+              <span className="text-xs font-mono text-muted-foreground">
+                {expense.category.name}
+              </span>
+            )}
+            {expense.project && (
+              <>
+                <span className="text-xs text-muted-foreground" aria-hidden="true">•</span>
+                <span className="text-xs font-mono text-muted-foreground">
+                  {expense.project.name}
+                </span>
+              </>
+            )}
+            <span className="text-xs font-mono text-muted-foreground">
+              {format(new Date(expense.date), 'd MMM yyyy', { locale: it })}
+            </span>
+          </div>
+        </div>
+      </div>
       
-      {/* Actions - Always visible on mobile, slide in on desktop */}
-      <div className={cn(
-        'flex items-center gap-1',
-        'md:translate-x-2 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100',
-        'transition-all duration-200 ease-out'
-      )}>
+      {/* Actions row - always visible, good spacing */}
+      <div className="flex items-center justify-end gap-1 mt-2 pl-[92px]">
+        {/* Receipt Icon */}
+        {expense.receipt_url && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Visualizza ricevuta"
+            className={cn(
+              'h-11 w-11 text-accent border-2 border-transparent',
+              'hover:border-accent hover:bg-accent/10',
+              'focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground',
+              'transition-all duration-200 touch-action-manipulation'
+            )}
+            onClick={() => setPreviewOpen(true)}
+          >
+            <Paperclip className="h-5 w-5" aria-hidden="true" />
+          </Button>
+        )}
+        
         <EditExpenseDialog expense={expense} />
+        
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Elimina spesa"
           className={cn(
-            'h-9 w-9 text-muted-foreground border-2 border-transparent shrink-0',
-            'hover:text-destructive hover:bg-destructive/10 hover:border-destructive hover:scale-105',
-            'transition-all duration-200 active:scale-95'
+            'h-11 w-11 text-muted-foreground border-2 border-transparent',
+            'hover:text-destructive hover:bg-destructive/10 hover:border-destructive',
+            'focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground',
+            'transition-all duration-200 touch-action-manipulation'
           )}
           onClick={() => deleteExpense.mutate(expense.id)}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-5 w-5" aria-hidden="true" />
         </Button>
       </div>
       

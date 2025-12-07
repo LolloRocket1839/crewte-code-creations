@@ -72,12 +72,13 @@ export function EditRevenueDialog({ revenue }: EditRevenueDialogProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted border-2 border-transparent hover:border-foreground"
+          aria-label="Modifica entrata"
+          className="h-11 w-11 text-muted-foreground hover:text-foreground hover:bg-muted border-2 border-transparent hover:border-foreground focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground touch-action-manipulation"
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-5 w-5" aria-hidden="true" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Modifica Entrata</DialogTitle>
         </DialogHeader>
