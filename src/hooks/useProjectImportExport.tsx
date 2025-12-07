@@ -355,13 +355,27 @@ export function useProjectImportExport() {
   };
 
   const validateImportData = (data: any): { valid: boolean; format: ImportFormat | null; preview: ImportPreview | null } => {
+    console.log('[Import] validateImportData called with:', data);
+    
     const format = detectFormat(data);
     
+    console.log('[Import] Detected format:', format);
+    
     if (!format) {
+      console.log('[Import] Validation failed: no format detected');
       return { valid: false, format: null, preview: null };
     }
     
     const normalized = normalizeImportData(data, format);
+    
+    console.log('[Import] Normalized data:', {
+      projectName: normalized.project.name,
+      expensesCount: normalized.expenses.length,
+      revenuesCount: normalized.revenues.length,
+      tasksCount: normalized.tasks.length,
+      expenseCategories: normalized.expenseCategories,
+      revenueCategories: normalized.revenueCategories,
+    });
     
     return {
       valid: true,
@@ -379,7 +393,12 @@ export function useProjectImportExport() {
   };
 
   const importProject = async (data: any, format: ImportFormat) => {
-    if (!user) return null;
+    console.log('[Import] importProject called with format:', format);
+    
+    if (!user) {
+      console.log('[Import] No user logged in');
+      return null;
+    }
     setIsImporting(true);
 
     try {
