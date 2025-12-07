@@ -5,21 +5,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-mono text-sm font-semibold uppercase tracking-wide ring-offset-background transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 touch-target",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-mono text-sm font-semibold uppercase tracking-wide ring-offset-background transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:transition-transform [&_svg]:duration-150 touch-target",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground border-2 border-primary shadow-brutal hover:bg-primary-foreground hover:text-primary active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
+          "bg-primary text-primary-foreground border-2 border-primary shadow-brutal hover:shadow-brutal-lg hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none hover:[&_svg]:scale-110",
         destructive:
-          "bg-destructive text-destructive-foreground border-2 border-destructive shadow-brutal hover:bg-destructive-foreground hover:text-destructive active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
+          "bg-destructive text-destructive-foreground border-2 border-destructive shadow-brutal hover:shadow-brutal-lg hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
         outline:
-          "border-2 border-foreground bg-background text-foreground shadow-brutal-sm hover:bg-foreground hover:text-background active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
+          "border-2 border-foreground bg-background text-foreground shadow-brutal-sm hover:bg-foreground hover:text-background hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
         secondary:
-          "bg-secondary text-secondary-foreground border-2 border-foreground shadow-brutal-sm hover:bg-foreground hover:text-background active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
+          "bg-secondary text-secondary-foreground border-2 border-foreground shadow-brutal-sm hover:bg-foreground hover:text-background hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
         ghost:
-          "border-2 border-transparent hover:border-foreground hover:bg-secondary active:scale-[0.97]",
-        link: "text-foreground underline-offset-4 hover:underline",
+          "border-2 border-transparent hover:border-foreground hover:bg-muted active:scale-[0.97] active:bg-muted/80",
+        link: "text-foreground underline-offset-4 hover:underline active:opacity-70",
+        success:
+          "bg-success text-success-foreground border-2 border-success shadow-brutal hover:shadow-brutal-lg hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
       },
       size: {
         default: "h-11 px-6 py-2",
