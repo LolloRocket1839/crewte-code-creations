@@ -4,6 +4,15 @@ import { ProjectMember } from '@/types';
 import { useAuth } from './useAuth';
 import { useToast } from '@/hooks/use-toast';
 
+export interface ProjectInvitation {
+  id: string;
+  project_id: string;
+  email: string;
+  role: 'viewer' | 'editor' | 'admin';
+  invited_by: string;
+  created_at: string;
+}
+
 export function useProjectMembers(projectId?: string) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -37,33 +46,85 @@ export function useProjectMembers(projectId?: string) {
     enabled: !!user && !!projectId,
   });
 
+  // Fetch pending invitations
+  const { data: pendingInvitations = [], isLoading: isLoadingInvitations } = useQuery({
+    queryKey: ['project_invitations', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_invitations')
+        .select('*')
+        .eq('project_id', projectId!)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data as ProjectInvitation[];
+    },
+    enabled: !!user && !!projectId,
+  });
+
   const addMember = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: 'viewer' | 'editor' | 'admin' }) => {
-      // First find the user by email in profiles
+      // First check if already invited
+      const { data: existingInvite } = await supabase
+        .from('project_invitations')
+        .select('id')
+        .eq('project_id', projectId!)
+        .ilike('email', email)
+        .maybeSingle();
+      
+      if (existingInvite) throw new Error('This email has already been invited');
+
+      // Try to find the user by email in profiles
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email)
+        .ilike('email', email)
         .maybeSingle();
       
       if (profileError) throw profileError;
-      if (!profile) throw new Error('User not found with that email');
       
-      // Check if already a member
-      const { data: existingMember } = await supabase
-        .from('project_members')
-        .select('id')
-        .eq('project_id', projectId!)
-        .eq('user_id', profile.id)
-        .maybeSingle();
+      // If user exists, add directly as member
+      if (profile) {
+        // Check if already a member
+        const { data: existingMember } = await supabase
+          .from('project_members')
+          .select('id')
+          .eq('project_id', projectId!)
+          .eq('user_id', profile.id)
+          .maybeSingle();
+        
+        if (existingMember) throw new Error('User is already a member of this project');
+        
+        const { data, error } = await supabase
+          .from('project_members')
+          .insert({
+            project_id: projectId!,
+            user_id: profile.id,
+            role,
+            invited_by: user!.id,
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        await supabase.from('activity_log').insert({
+          user_id: user!.id,
+          action: 'shared',
+          entity_type: 'project',
+          entity_id: projectId,
+          entity_name: email,
+          metadata: { role },
+        });
+        
+        return { type: 'member', data };
+      }
       
-      if (existingMember) throw new Error('User is already a member of this project');
-      
+      // User doesn't exist, create a pending invitation
       const { data, error } = await supabase
-        .from('project_members')
+        .from('project_invitations')
         .insert({
           project_id: projectId!,
-          user_id: profile.id,
+          email: email.toLowerCase(),
           role,
           invited_by: user!.id,
         })
@@ -74,19 +135,28 @@ export function useProjectMembers(projectId?: string) {
       
       await supabase.from('activity_log').insert({
         user_id: user!.id,
-        action: 'shared',
+        action: 'invited',
         entity_type: 'project',
         entity_id: projectId,
         entity_name: email,
-        metadata: { role },
+        metadata: { role, pending: true },
       });
       
-      return data;
+      return { type: 'invitation', data };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['project_members', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project_invitations', projectId] });
       queryClient.invalidateQueries({ queryKey: ['activity'] });
-      toast({ title: 'Member added successfully' });
+      
+      if (result.type === 'member') {
+        toast({ title: 'Member added successfully' });
+      } else {
+        toast({ 
+          title: 'Invitation sent', 
+          description: 'They will be added when they sign up' 
+        });
+      }
     },
     onError: (error: Error) => {
       toast({ title: 'Failed to add member', description: error.message, variant: 'destructive' });
@@ -131,11 +201,30 @@ export function useProjectMembers(projectId?: string) {
     },
   });
 
+  const cancelInvitation = useMutation({
+    mutationFn: async (invitationId: string) => {
+      const { error } = await supabase
+        .from('project_invitations')
+        .delete()
+        .eq('id', invitationId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project_invitations', projectId] });
+      toast({ title: 'Invitation cancelled' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Failed to cancel invitation', description: error.message, variant: 'destructive' });
+    },
+  });
+
   return {
     members,
-    isLoading,
+    pendingInvitations,
+    isLoading: isLoading || isLoadingInvitations,
     addMember,
     updateMemberRole,
     removeMember,
+    cancelInvitation,
   };
 }
