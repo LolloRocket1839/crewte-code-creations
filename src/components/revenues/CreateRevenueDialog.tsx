@@ -11,6 +11,8 @@ import { useRevenues } from '@/hooks/useRevenues';
 import { useProjects } from '@/hooks/useProjects';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { CURRENCIES, Currency } from '@/types';
+import { validateRevenue } from '@/lib/validationSchemas';
+import { toast } from 'sonner';
 
 interface CreateRevenueDialogProps {
   projectId?: string;
@@ -40,18 +42,28 @@ export function CreateRevenueDialog({ projectId }: CreateRevenueDialogProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createRevenue.mutate({
-      description,
-      amount: parseFloat(amount),
+    
+    // Validate form data
+    const formData = {
+      description: description.trim(),
+      amount: parseFloat(amount) || 0,
       currency,
       category_id: categoryId && categoryId !== 'none' ? categoryId : null,
       project_id: selectedProject && selectedProject !== 'none' ? selectedProject : null,
       date,
       is_recurring: isRecurring,
       recurrence_type: isRecurring ? recurrenceType : null,
-      recurrence_day: isRecurring ? parseInt(recurrenceDay) : null,
-      notes: notes || null,
-    });
+      recurrence_day: isRecurring ? parseInt(recurrenceDay) || 1 : null,
+      notes: notes.trim() || null,
+    };
+    
+    const validation = validateRevenue(formData);
+    if ('error' in validation) {
+      toast.error(validation.error);
+      return;
+    }
+    
+    createRevenue.mutate(validation.data as any);
     setOpen(false);
     resetForm();
   };
@@ -88,6 +100,7 @@ export function CreateRevenueDialog({ projectId }: CreateRevenueDialogProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Descrizione dell'entrata"
+              maxLength={200}
               required
             />
           </div>
@@ -99,7 +112,8 @@ export function CreateRevenueDialog({ projectId }: CreateRevenueDialogProps) {
                 id="revenue-amount"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
+                max="999999999"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
@@ -227,6 +241,7 @@ export function CreateRevenueDialog({ projectId }: CreateRevenueDialogProps) {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Note aggiuntive..."
               rows={2}
+              maxLength={1000}
             />
           </div>
           
