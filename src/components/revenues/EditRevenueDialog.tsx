@@ -1,5 +1,7 @@
 import { useState, useEffect, RefObject } from 'react';
 import { Pencil } from 'lucide-react';
+import { toast } from 'sonner';
+import { validateRevenue } from '@/lib/validationSchemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -52,8 +54,8 @@ export function EditRevenueDialog({ revenue, triggerRef, hideTrigger }: EditReve
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateRevenue.mutate({
-      id: revenue.id,
+    
+    const formData = {
       description,
       amount: parseFloat(amount),
       currency,
@@ -64,6 +66,19 @@ export function EditRevenueDialog({ revenue, triggerRef, hideTrigger }: EditReve
       recurrence_type: isRecurring ? recurrenceType : null,
       recurrence_day: isRecurring ? parseInt(recurrenceDay) : null,
       notes: notes || null,
+    };
+
+    const validation = validateRevenue(formData);
+    if (!validation.success) {
+      toast.error((validation as { success: false; error: string }).error);
+      return;
+    }
+
+    const validatedData = (validation as { success: true; data: typeof formData }).data;
+
+    updateRevenue.mutate({
+      id: revenue.id,
+      ...validatedData,
     });
     setOpen(false);
   };
