@@ -1,4 +1,4 @@
-import { DollarSign, FolderKanban, ListTodo, TrendingUp, Plus } from 'lucide-react';
+import { Receipt, FolderKanban, ListTodo, TrendingUp, Plus } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
@@ -43,7 +43,7 @@ export default function Dashboard() {
           <StatsCard
             title="Spese Totali"
             value={formatMultiCurrency(expensesByCurrency)}
-            icon={<DollarSign className="h-5 w-5" />}
+            icon={<Receipt className="h-5 w-5" />}
           />
           <StatsCard
             title="Progetti Attivi"
