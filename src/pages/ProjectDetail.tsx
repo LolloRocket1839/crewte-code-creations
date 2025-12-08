@@ -13,11 +13,13 @@ import { useTasks } from '@/hooks/useTasks';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectImportExport } from '@/hooks/useProjectImportExport';
+import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { DollarSign, ListTodo, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getCurrencySymbol, Currency } from '@/types';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -25,8 +27,9 @@ export default function ProjectDetail() {
   const { user } = useAuth();
   const { projects } = useProjects();
   const { tasks } = useTasks(id);
-  const { expenses, totalExpenses } = useExpenses(id);
+  const { expenses, totalExpenses, expensesByCurrency } = useExpenses(id);
   const { exportProject, isExporting } = useProjectImportExport();
+  const { defaultCurrency } = useUserCurrency();
 
   const project = projects.find(p => p.id === id);
   const isOwner = project?.user_id === user?.id;
@@ -47,14 +50,16 @@ export default function ProjectDetail() {
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const budgetPercentage = project.budget > 0 ? (totalExpenses / project.budget) * 100 : 0;
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+  const formatCurrency = (amount: number, currency: Currency = defaultCurrency) => {
+    const symbol = getCurrencySymbol(currency);
+    return `${symbol}${amount.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
+
+  // Format expenses by currency for display
+  const currencyTotals = Object.entries(expensesByCurrency)
+    .filter(([_, amount]) => amount > 0)
+    .map(([currency, amount]) => formatCurrency(amount, currency as Currency))
+    .join(' | ');
 
   return (
     <AppLayout>
@@ -95,7 +100,7 @@ export default function ProjectDetail() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatsCard
             title="Total Spent"
-            value={formatCurrency(totalExpenses)}
+            value={currencyTotals || formatCurrency(0)}
             icon={<DollarSign className="h-5 w-5" />}
           />
           <StatsCard
@@ -109,7 +114,7 @@ export default function ProjectDetail() {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Budget</p>
                   <p className="text-2xl font-semibold text-foreground mt-2">
-                    {formatCurrency(project.budget)}
+                    {formatCurrency(project.budget, defaultCurrency)}
                   </p>
                   {project.budget > 0 && (
                     <div className="mt-3 space-y-2">
