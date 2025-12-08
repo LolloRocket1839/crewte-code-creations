@@ -1,6 +1,8 @@
-import { ExternalLink, Download, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ExternalLink, Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useReceiptUpload } from '@/hooks/useReceiptUpload';
 
 interface ReceiptPreviewProps {
   open: boolean;
@@ -9,11 +11,35 @@ interface ReceiptPreviewProps {
 }
 
 export function ReceiptPreview({ open, onOpenChange, receiptUrl }: ReceiptPreviewProps) {
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { getSignedUrl } = useReceiptUpload();
+  
   const isPdf = receiptUrl.toLowerCase().endsWith('.pdf');
 
+  useEffect(() => {
+    const fetchSignedUrl = async () => {
+      if (open && receiptUrl) {
+        setIsLoading(true);
+        const url = await getSignedUrl(receiptUrl);
+        setSignedUrl(url);
+        setIsLoading(false);
+      }
+    };
+    fetchSignedUrl();
+  }, [open, receiptUrl]);
+
+  const handleOpen = () => {
+    if (signedUrl) {
+      window.open(signedUrl, '_blank');
+    }
+  };
+
   const handleDownload = () => {
+    if (!signedUrl) return;
+    
     const link = document.createElement('a');
-    link.href = receiptUrl;
+    link.href = signedUrl;
     link.download = 'ricevuta';
     link.target = '_blank';
     document.body.appendChild(link);
@@ -31,7 +57,8 @@ export function ReceiptPreview({ open, onOpenChange, receiptUrl }: ReceiptPrevie
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(receiptUrl, '_blank')}
+                onClick={handleOpen}
+                disabled={!signedUrl}
               >
                 <ExternalLink className="h-4 w-4 mr-1" />
                 Apri
@@ -40,6 +67,7 @@ export function ReceiptPreview({ open, onOpenChange, receiptUrl }: ReceiptPrevie
                 variant="outline"
                 size="sm"
                 onClick={handleDownload}
+                disabled={!signedUrl}
               >
                 <Download className="h-4 w-4 mr-1" />
                 Scarica
@@ -49,22 +77,35 @@ export function ReceiptPreview({ open, onOpenChange, receiptUrl }: ReceiptPrevie
         </DialogHeader>
         
         <div className="mt-4">
-          {isPdf ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center p-8 border-2 border-muted bg-muted/20">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
+              <p className="text-muted-foreground font-mono">
+                Caricamento ricevuta...
+              </p>
+            </div>
+          ) : isPdf ? (
             <div className="flex flex-col items-center justify-center p-8 border-2 border-muted bg-muted/20">
               <p className="text-muted-foreground font-mono mb-4">
                 Anteprima PDF non disponibile
               </p>
-              <Button onClick={() => window.open(receiptUrl, '_blank')}>
+              <Button onClick={handleOpen} disabled={!signedUrl}>
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Apri PDF in nuova scheda
               </Button>
             </div>
-          ) : (
+          ) : signedUrl ? (
             <img
-              src={receiptUrl}
+              src={signedUrl}
               alt="Ricevuta"
               className="w-full max-h-[60vh] object-contain border-2 border-foreground"
             />
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 border-2 border-muted bg-muted/20">
+              <p className="text-muted-foreground font-mono">
+                Impossibile caricare la ricevuta
+              </p>
+            </div>
           )}
         </div>
       </DialogContent>

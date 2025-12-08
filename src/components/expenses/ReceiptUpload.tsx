@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, X, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -15,8 +15,20 @@ export function ReceiptUpload({ expenseId, currentUrl, onUpload, onRemove }: Rec
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const { uploadReceipt, deleteReceipt, isUploading, progress, validateFile } = useReceiptUpload();
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const { uploadReceipt, deleteReceipt, getSignedUrl, isUploading, progress, validateFile } = useReceiptUpload();
   const [isDragging, setIsDragging] = useState(false);
+
+  // Get signed URL when currentUrl changes
+  useEffect(() => {
+    const fetchSignedUrl = async () => {
+      if (currentUrl && !file) {
+        const url = await getSignedUrl(currentUrl);
+        setSignedUrl(url);
+      }
+    };
+    fetchSignedUrl();
+  }, [currentUrl, file]);
 
   const handleFileSelect = (selectedFile: File) => {
     const error = validateFile(selectedFile);
@@ -77,6 +89,7 @@ export function ReceiptUpload({ expenseId, currentUrl, onUpload, onRemove }: Rec
       const success = await deleteReceipt(currentUrl);
       if (success) {
         onUpload(null);
+        setSignedUrl(null);
         onRemove?.();
       }
     } else {
@@ -90,6 +103,19 @@ export function ReceiptUpload({ expenseId, currentUrl, onUpload, onRemove }: Rec
     setPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleOpenReceipt = async () => {
+    if (signedUrl) {
+      window.open(signedUrl, '_blank');
+    } else if (currentUrl) {
+      // Try to get a fresh signed URL
+      const url = await getSignedUrl(currentUrl);
+      if (url) {
+        setSignedUrl(url);
+        window.open(url, '_blank');
+      }
     }
   };
 
@@ -116,7 +142,7 @@ export function ReceiptUpload({ expenseId, currentUrl, onUpload, onRemove }: Rec
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => window.open(currentUrl, '_blank')}
+              onClick={handleOpenReceipt}
               className="text-xs"
             >
               Apri
@@ -132,9 +158,9 @@ export function ReceiptUpload({ expenseId, currentUrl, onUpload, onRemove }: Rec
             </Button>
           </div>
         </div>
-        {isImage && (
+        {isImage && signedUrl && (
           <img 
-            src={currentUrl} 
+            src={signedUrl} 
             alt="Ricevuta" 
             className="w-full max-h-32 object-contain border border-muted"
           />

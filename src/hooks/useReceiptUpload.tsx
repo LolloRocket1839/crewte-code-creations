@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 const BUCKET_NAME = 'expense-receipts';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+const SIGNED_URL_EXPIRY = 3600; // 1 hour
 
 export function useReceiptUpload() {
   const { user } = useAuth();
@@ -20,6 +21,53 @@ export function useReceiptUpload() {
       return 'File troppo grande. Massimo 10MB.';
     }
     return null;
+  };
+
+  // Extract file path from stored receipt URL
+  const extractFilePath = (receiptUrl: string): string | null => {
+    // Handle both public URLs and signed URLs
+    // Public URL format: https://...supabase.co/storage/v1/object/public/expense-receipts/user-id/file.jpg
+    // Signed URL format: https://...supabase.co/storage/v1/object/sign/expense-receipts/user-id/file.jpg?token=...
+    
+    const publicMatch = receiptUrl.match(/\/object\/public\/expense-receipts\/(.+?)(?:\?|$)/);
+    if (publicMatch) {
+      return publicMatch[1];
+    }
+    
+    const signMatch = receiptUrl.match(/\/object\/sign\/expense-receipts\/(.+?)(?:\?|$)/);
+    if (signMatch) {
+      return signMatch[1];
+    }
+    
+    // Fallback: try to extract after bucket name
+    const bucketMatch = receiptUrl.split(`${BUCKET_NAME}/`);
+    if (bucketMatch.length >= 2) {
+      return bucketMatch[1].split('?')[0]; // Remove query params
+    }
+    
+    return null;
+  };
+
+  // Generate a signed URL for viewing a receipt
+  const getSignedUrl = async (receiptUrl: string): Promise<string | null> => {
+    if (!user) return null;
+    
+    const filePath = extractFilePath(receiptUrl);
+    if (!filePath) {
+      console.error('Could not extract file path from URL:', receiptUrl);
+      return null;
+    }
+    
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .createSignedUrl(filePath, SIGNED_URL_EXPIRY);
+    
+    if (error) {
+      console.error('Error creating signed URL:', error);
+      return null;
+    }
+    
+    return data.signedUrl;
   };
 
   const uploadReceipt = async (file: File, expenseId: string): Promise<string | null> => {
@@ -60,15 +108,15 @@ export function useReceiptUpload() {
         throw uploadError;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(fileName);
+      // Store the file path reference (not a public URL since bucket is now private)
+      // We'll generate signed URLs when displaying
+      const storedPath = `${BUCKET_NAME}/${fileName}`;
 
       toast.success('Ricevuta caricata con successo');
-      return publicUrl;
+      return storedPath;
     } catch (err: any) {
       console.error('Upload error:', err);
-      toast.error('Errore durante il caricamento: ' + err.message);
+      toast.error('Errore durante il caricamento');
       return null;
     } finally {
       setIsUploading(false);
@@ -83,12 +131,10 @@ export function useReceiptUpload() {
     }
 
     try {
-      // Extract file path from URL
-      const urlParts = receiptUrl.split(`${BUCKET_NAME}/`);
-      if (urlParts.length < 2) {
+      const filePath = extractFilePath(receiptUrl);
+      if (!filePath) {
         throw new Error('URL ricevuta non valido');
       }
-      const filePath = urlParts[1];
 
       const { error } = await supabase.storage
         .from(BUCKET_NAME)
@@ -102,7 +148,7 @@ export function useReceiptUpload() {
       return true;
     } catch (err: any) {
       console.error('Delete error:', err);
-      toast.error('Errore durante l\'eliminazione: ' + err.message);
+      toast.error('Errore durante l\'eliminazione');
       return false;
     }
   };
@@ -110,6 +156,7 @@ export function useReceiptUpload() {
   return {
     uploadReceipt,
     deleteReceipt,
+    getSignedUrl,
     isUploading,
     progress,
     validateFile,

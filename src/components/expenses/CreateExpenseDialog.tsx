@@ -12,6 +12,8 @@ import { useProjects } from '@/hooks/useProjects';
 import { useReceiptUpload } from '@/hooks/useReceiptUpload';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { CURRENCIES, Currency } from '@/types';
+import { validateExpense } from '@/lib/validationSchemas';
+import { toast } from 'sonner';
 
 interface CreateExpenseDialogProps {
   projectId?: string;
@@ -44,16 +46,25 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    createExpense.mutate({
-      description,
-      amount: parseFloat(amount),
+    // Validate form data
+    const formData = {
+      description: description.trim(),
+      amount: parseFloat(amount) || 0,
       currency,
       category_id: categoryId && categoryId !== 'none' ? categoryId : null,
       project_id: selectedProject && selectedProject !== 'none' ? selectedProject : null,
       date,
       is_paid: isPaid,
-      notes: notes || null,
-    }, {
+      notes: notes.trim() || null,
+    };
+    
+    const validation = validateExpense(formData);
+    if ('error' in validation) {
+      toast.error(validation.error);
+      return;
+    }
+    
+    createExpense.mutate(validation.data as any, {
       onSuccess: async (data) => {
         // Upload receipt if file was selected
         if (receiptFile && data?.id) {
@@ -116,6 +127,7 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Descrizione della spesa"
+              maxLength={200}
               required
             />
           </div>
@@ -127,7 +139,8 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
                 id="amount"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
+                max="999999999"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
@@ -226,6 +239,7 @@ export function CreateExpenseDialog({ projectId }: CreateExpenseDialogProps) {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Note aggiuntive..."
               rows={2}
+              maxLength={1000}
             />
           </div>
           
