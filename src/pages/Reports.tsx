@@ -13,14 +13,17 @@ import { InvestmentMetrics } from '@/components/reports/InvestmentMetrics';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useRevenues } from '@/hooks/useRevenues';
 import { useProjects } from '@/hooks/useProjects';
+import { useUserCurrency } from '@/hooks/useUserCurrency';
+import { formatCurrency, formatMultiCurrency } from '@/lib/currencyUtils';
 import { ExpenseFilters as Filters, InvestmentMetrics as MetricsType } from '@/types';
 import { DollarSign, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Reports() {
-  const { expenses, categories, filterExpenses, paidExpenses, unpaidExpenses } = useExpenses();
-  const { revenues, totalRevenues } = useRevenues();
+  const { expenses, categories, filterExpenses, paidExpenses, unpaidExpenses, expensesByCurrency } = useExpenses();
+  const { revenues, totalRevenues, revenuesByCurrency } = useRevenues();
   const { projects } = useProjects();
+  const { defaultCurrency } = useUserCurrency();
 
   const [filters, setFilters] = useState<Filters>({
     search: '',
@@ -44,15 +47,6 @@ export default function Reports() {
     roi: totalBudget > 0 ? ((totalRevenues - totalExpenses) / totalBudget) * 100 : 0,
     capRate: totalBudget > 0 ? (totalRevenues / totalBudget) * 100 : 0,
     cashOnCash: totalExpenses > 0 ? ((totalRevenues - totalExpenses) / totalExpenses) * 100 : 0,
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('it-IT', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
   };
 
   return (
@@ -81,7 +75,7 @@ export default function Reports() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Spese Pagate</p>
-                <p className="text-xl font-mono font-bold mt-1 text-green-600">{formatCurrency(paidExpenses)}</p>
+                <p className="text-xl font-mono font-bold mt-1 text-green-600">{formatCurrency(paidExpenses, defaultCurrency)}</p>
               </div>
               <DollarSign className="h-5 w-5 text-green-600" />
             </div>
@@ -90,7 +84,7 @@ export default function Reports() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Da Pagare</p>
-                <p className="text-xl font-mono font-bold mt-1 text-red-600">{formatCurrency(unpaidExpenses)}</p>
+                <p className="text-xl font-mono font-bold mt-1 text-red-600">{formatCurrency(unpaidExpenses, defaultCurrency)}</p>
               </div>
               <TrendingDown className="h-5 w-5 text-red-600" />
             </div>
@@ -99,7 +93,7 @@ export default function Reports() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Entrate</p>
-                <p className="text-xl font-mono font-bold mt-1 text-green-600">{formatCurrency(totalRevenues)}</p>
+                <p className="text-xl font-mono font-bold mt-1 text-green-600">{formatMultiCurrency(revenuesByCurrency)}</p>
               </div>
               <TrendingUp className="h-5 w-5 text-green-600" />
             </div>
@@ -108,7 +102,7 @@ export default function Reports() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Budget Totale</p>
-                <p className="text-xl font-mono font-bold mt-1">{formatCurrency(totalBudget)}</p>
+                <p className="text-xl font-mono font-bold mt-1">{formatCurrency(totalBudget, defaultCurrency)}</p>
               </div>
               <Wallet className="h-5 w-5" />
             </div>
