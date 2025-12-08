@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderKanban, Calendar, FileBarChart, Settings } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Calendar, TrendingUp, Settings } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { cn } from '@/lib/utils';
 
@@ -6,7 +6,7 @@ const navItems = [
   { title: 'Home', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Progetti', url: '/projects', icon: FolderKanban },
   { title: 'Calendario', url: '/calendar', icon: Calendar },
-  { title: 'Report', url: '/reports', icon: FileBarChart },
+  { title: 'Flusso', url: '/cash-flow', icon: TrendingUp },
   { title: 'Altro', url: '/settings', icon: Settings },
 ];
 
