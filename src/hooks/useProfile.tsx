@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 
 interface Profile {
   id: string;
-  email: string | null;
   full_name: string | null;
   default_currency: Currency | null;
   created_at: string | null;

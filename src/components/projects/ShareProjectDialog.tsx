@@ -147,6 +147,11 @@ interface MemberRowProps {
 }
 
 function MemberRow({ member, isOwner, onUpdateRole, onRemove }: MemberRowProps) {
+  const roleLabels = {
+    viewer: 'Viewer',
+    editor: 'Editor',
+    admin: 'Admin',
+  };
   const roleColors = {
     viewer: 'bg-muted text-muted-foreground',
     editor: 'bg-accent text-accent-foreground',
@@ -157,14 +162,14 @@ function MemberRow({ member, isOwner, onUpdateRole, onRemove }: MemberRowProps) 
     <div className="flex items-center justify-between p-3 border-2 border-foreground hover:bg-muted/50 transition-colors">
       <div className="flex items-center gap-3">
         <div className="h-8 w-8 border-2 border-foreground bg-background flex items-center justify-center font-mono font-bold text-sm">
-          {member.profile?.full_name?.[0] || member.profile?.email?.[0] || '?'}
+          {member.profile?.full_name?.[0] || '?'}
         </div>
         <div>
           <p className="font-mono text-sm font-medium">
             {member.profile?.full_name || 'Unknown'}
           </p>
           <p className="font-mono text-xs text-muted-foreground">
-            {member.profile?.email || 'No email'}
+            {roleLabels[member.role]}
           </p>
         </div>
       </div>
