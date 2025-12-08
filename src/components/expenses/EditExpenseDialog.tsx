@@ -1,5 +1,7 @@
 import { useState, useEffect, RefObject } from 'react';
 import { Pencil } from 'lucide-react';
+import { toast } from 'sonner';
+import { validateExpense } from '@/lib/validationSchemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,8 +51,8 @@ export function EditExpenseDialog({ expense, triggerRef, hideTrigger }: EditExpe
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateExpense.mutate({
-      id: expense.id,
+    
+    const formData = {
       description,
       amount: parseFloat(amount),
       currency,
@@ -58,8 +60,21 @@ export function EditExpenseDialog({ expense, triggerRef, hideTrigger }: EditExpe
       project_id: selectedProject && selectedProject !== 'none' ? selectedProject : null,
       date,
       is_paid: isPaid,
-      paid_at: isPaid ? new Date().toISOString() : null,
       notes: notes || null,
+    };
+
+    const validation = validateExpense(formData);
+    if (!validation.success) {
+      toast.error((validation as { success: false; error: string }).error);
+      return;
+    }
+
+    const validatedData = (validation as { success: true; data: typeof formData }).data;
+
+    updateExpense.mutate({
+      id: expense.id,
+      ...validatedData,
+      paid_at: isPaid ? new Date().toISOString() : null,
       receipt_url: receiptUrl,
     });
     setOpen(false);
